@@ -166,22 +166,15 @@ def check_ckpt(checkpoint_path):
                            optimizer=optimizer,
                            generator=generator)
 
-    ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=50)
-    
-    
-    if tf.train.latest_checkpoint(checkpoint_path) and not config.from_scratch:
-      ckpt.restore(tf.train.latest_checkpoint(checkpoint_path))
-      log.info(ckpt_manager.latest_checkpoint, 'checkpoint restored!!')
+    ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=20)
+    if tf.train.latest_checkpoint(checkpoint_path):
+      ckpt.restore(ckpt_manager.latest_checkpoint)
+      log.info(ckpt_manager.latest_checkpoint +'restored')
+      latest_ckpt = int(ckpt_manager.latest_checkpoint[-2:])
     else:
-        ckpt_manager = tf.train.CheckpointManager(ckpt, file_path.new_checkpoint_path, max_to_keep=20)
+        latest_ckpt=0
         log.info('Training from scratch')
     return ckpt_manager
-
-
-
-# get the latest checkpoint from the save directory
-if not config.from_scratch:
-  latest_ckpt = int(tf.train.latest_checkpoint(file_path.old_checkpoint_path)[-2:]) 
 
 
 for epoch in range(h_parms.epochs):
@@ -203,12 +196,11 @@ for epoch in range(h_parms.epochs):
     if batch % config.print_chks == 0:
       log.info('Epoch {} Batch {} Train_Loss {:.4f} Train_Accuracy {:.4f}'.format(
         epoch + 1, batch, train_loss.result(), train_accuracy.result()))
-  if config.from_scratch:
-    latest_ckpt=epoch+1
+  
   (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(val_dataset, epoch+1)
-  ckpt_save_path = check_ckpt(file_path.old_checkpoint_path).save()
+  ckpt_save_path = check_ckpt(file_path.checkpoint_path).save()
   ckpt_fold, ckpt_string = os.path.split(ckpt_save_path)
-
+  latest_ckpt+=1
   if config.run_tensorboard:
     with train_summary_writer.as_default():
       tf.summary.scalar('train_loss', train_loss.result(), step=epoch)

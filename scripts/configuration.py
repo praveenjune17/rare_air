@@ -7,7 +7,6 @@ hyp = {
  'd_model': 512,                  # the projected word vector dimension
  'dff': 512,                      # feed forward network hidden parameters
  'early_stop' : False,
- 'from_scratch': False,           # train from scratch
  'init_tolerance':0,
  'input_vocab_size': 8167,        # total vocab size + start and end token
  'last_validation_loss' : float('inf'),

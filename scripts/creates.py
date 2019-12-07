@@ -5,7 +5,8 @@ import tensorflow as tf
 import os
 import shutil
 import logging
-from hyper_parameters import config
+from hyper_parameters import h_parms
+from configuration import config
 from input_path import file_path
 
 
@@ -13,7 +14,7 @@ from input_path import file_path
 log = logging.getLogger('tensorflow')
 log.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-fh = logging.FileHandler(config.log_path)
+fh = logging.FileHandler(file_path.log_path)
 fh.setLevel(logging.DEBUG)
 fh.setFormatter(formatter)
 log.addHandler(fh)
@@ -32,10 +33,6 @@ if input('Remove summaries dir and tensorboard_logs ? reply "yes or no" ') == 'y
     shutil.rmtree(file_path.tensorboard_log)
   except FileNotFoundError:
     pass
-
-if config.from_scratch:
-    fol_name = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_path['new_checkpoint_path'] = os.path.join(file_path['new_checkpoint_path'], fol_name)
 
 if config.run_tensorboard:
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")

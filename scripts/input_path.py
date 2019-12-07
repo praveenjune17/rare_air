@@ -8,8 +8,7 @@ file_path = {
         'infer_csv_path' : "/content/drive/My Drive/Client_demo/input_files/Azure_dataset/Test.csv",
         'infer_ckpt_path' : "/content/drive/My Drive/Client_demo/created_files/training_summarization_model_ckpts/giga/best_checkpoints/ckpt-37",
         'log_path' : "/content/drive/My Drive/Client_demo/created_files/tensorflow.log",
-        'new_checkpoint_path' : "/content/giga/"
-        'old_checkpoint_path' : "/content/giga_with_copy_gen/",
+        'checkpoint_path' : "/content/giga_with_copy_gen/",
         'subword_vocab_path' : "/content/drive/My Drive/Client_demo/input_files/Vocab_files/vocab_file_summarization_giga",
         'summary_write_path' : "/content/drive/My Drive/Client_demo/created_files/summaries/giga/",
         'summary' :  "Summary",
