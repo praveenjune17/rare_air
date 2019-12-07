@@ -34,7 +34,7 @@ def map_batch_shuffle(dataset, buffer_size, split, batch_size=h_parms.batch_size
     tf_dataset = tf_dataset.filter(filter_token_size)
     sum_of_records = sum(1 for l in tf_dataset)                                                                                   #TODO
     tf_dataset = tf_dataset.cache()
-    if buffer_size:
+    if split == 'train':
         tf_dataset = tf_dataset.shuffle(buffer_size, seed = 100)
     tf_dataset = tf_dataset.padded_batch(batch_size, padded_shapes=([-1], [-1]))
     tf_dataset = tf_dataset.prefetch(buffer_size=AUTOTUNE)

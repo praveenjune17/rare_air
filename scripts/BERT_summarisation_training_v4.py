@@ -160,7 +160,7 @@ def calc_validation_loss(validation_dataset, epoch):
     val_acc += validation_accuracy.result()
   return (val_acc.numpy()/(batch+1), val_loss.numpy()/(batch+1), rouge_score, bert_score)
 
-# if a checkpoint exists, restore the latest checkpoint.
+
 def check_ckpt(checkpoint_path):
     ckpt = tf.train.Checkpoint(transformer=transformer,
                            optimizer=optimizer,
@@ -174,8 +174,10 @@ def check_ckpt(checkpoint_path):
     else:
         latest_ckpt=0
         log.info('Training from scratch')
-    return ckpt_manager
+    return (ckpt_manager, latest_ckpt)
 
+# if a checkpoint exists, restore the latest checkpoint.
+ck_pt_mgr, latest_ckpt = check_ckpt(file_path.checkpoint_path)
 
 for epoch in range(h_parms.epochs):
   start = time.time()  
@@ -198,7 +200,7 @@ for epoch in range(h_parms.epochs):
         epoch + 1, batch, train_loss.result(), train_accuracy.result()))
   
   (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(val_dataset, epoch+1)
-  ckpt_save_path = check_ckpt(file_path.checkpoint_path).save()
+  ckpt_save_path = ck_pt_mgr.save()
   ckpt_fold, ckpt_string = os.path.split(ckpt_save_path)
   latest_ckpt+=1
   if config.run_tensorboard:
