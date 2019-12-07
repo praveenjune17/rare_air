@@ -3,6 +3,7 @@ from bunch import Bunch
 
 
 hyp = {
+ 'copy_gen':True,
  'doc_length': 8096,
  'd_model': 512,                  # the projected word vector dimension
  'dff': 512,                      # feed forward network hidden parameters

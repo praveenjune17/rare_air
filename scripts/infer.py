@@ -95,9 +95,9 @@ def run_infer(beam_sizes_to_try = h_parms.beam_sizes):
         # translated_output_temp[0] (batch, beam_size, summ_length+1)
         translated_output_temp = beam_search_eval(document, beam_size)
         for top_sentence_ids in (translated_output_temp[0][:,0,:]):
-          print('Original document: {}'.format(sample_document))
-          print('Predicted summary: {}'.format(tokenizer_en.decode([j for j in top_sentence_ids if j < tokenizer_en.vocab_size])))
-        print(f'time to process document {doc_id} : {time.time()-start_time}')
-      print(f'############ Beam size {beam_size} completed #########')
+          log.info('Original document: {}'.format(sample_document))
+          log.info('Predicted summary: {}'.format(tokenizer_en.decode([j for j in top_sentence_ids if j < tokenizer_en.vocab_size])))
+        log.info(f'time to process document {doc_id} : {time.time()-start_time}')
+      log.info(f'############ Beam size {beam_size} completed #########')
 
 

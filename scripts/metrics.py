@@ -8,11 +8,12 @@ from rouge import Rouge
 from input_path import file_path
 from create_tokenizer import tokenizer_en
 from bert_score import score as b_score
+from creates import log
 
 rouge_all = Rouge()
 
-print('Loading Pre-trained BERT model for BERT SCORE calculation')
-_, _, _ = b_score(['john does not like stacy'], ['john does like stacy'], lang='en', model_type='bert-base-uncased')
+log.info('Loading Pre-trained BERT model for BERT SCORE calculation')
+_, _, _ = b_score(["I'm Batman"], ["I'm Spiderman"], lang='en', model_type='bert-base-uncased')
 
 
 

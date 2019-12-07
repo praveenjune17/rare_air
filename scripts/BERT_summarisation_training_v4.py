@@ -255,5 +255,5 @@ for epoch in range(h_parms.epochs):
     log.info(f'Early stopping since the validation loss exceeded the tolerance threshold')
     break
   if train_loss.result() == 0:
-    print('Train loss reached zero so stopping training')
+    log.info('Train loss reached zero so stopping training')
     break

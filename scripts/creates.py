@@ -18,7 +18,10 @@ fh = logging.FileHandler(file_path.log_path)
 fh.setLevel(logging.DEBUG)
 fh.setFormatter(formatter)
 log.addHandler(fh)
+log.propagate = False
 
+if not tf.test.is_gpu_available():
+    log.info("GPU Not available so Running in CPU")
 
 def check_and_create_dir(path):
     if not os.path.exists(path):
