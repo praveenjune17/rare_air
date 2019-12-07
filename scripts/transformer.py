@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Oct 25 17:14:54 2019
-
-@author: pravech3
-"""
 import tensorflow as tf
 import numpy as np
-from hyper_parameters import config
+from hyper_parameters import h_parms
+from configuration import config
 
 def get_angles(pos, i, d_model):
   angle_rates = 1 / np.power(10000, (2 * (i//2)) / np.float32(d_model))
@@ -19,14 +15,10 @@ def positional_encoding(position, d_model):
   
   # apply sin to even indices in the array; 2i
   sines = np.sin(angle_rads[:, 0::2])
-  
   # apply cos to odd indices in the array; 2i+1
   cosines = np.cos(angle_rads[:, 1::2])
-  
   pos_encoding = np.concatenate([sines, cosines], axis=-1)
-  
   pos_encoding = pos_encoding[np.newaxis, ...]
-    
   return tf.cast(pos_encoding, dtype=tf.float32)
 
 
@@ -48,11 +40,8 @@ def create_masks(inp, tar):
   # It is used to pad and mask future tokens in the input received by 
   # the decoder.allows decoder to attend to all positions in the decoder up to and including that position(refer architecture)
   dec_target_padding_mask = create_padding_mask(tar)
-  
   look_ahead_mask = create_look_ahead_mask(tf.shape(tar)[1])
-  
   combined_mask = tf.maximum(dec_target_padding_mask, look_ahead_mask)
-  
   return enc_padding_mask, combined_mask, dec_padding_mask
 
 def create_look_ahead_mask(size):
@@ -105,11 +94,11 @@ class MultiHeadAttention(tf.keras.layers.Layer):
     
     self.depth = d_model // self.num_heads
     
-    self.wq = tf.keras.layers.Dense(d_model, kernel_regularizer = tf.keras.regularizers.l2(config.l2_norm))
-    self.wk = tf.keras.layers.Dense(d_model, kernel_regularizer = tf.keras.regularizers.l2(config.l2_norm))
-    self.wv = tf.keras.layers.Dense(d_model, kernel_regularizer = tf.keras.regularizers.l2(config.l2_norm))
+    self.wq = tf.keras.layers.Dense(d_model, kernel_regularizer = tf.keras.regularizers.l2(h_parms.l2_norm))
+    self.wk = tf.keras.layers.Dense(d_model, kernel_regularizer = tf.keras.regularizers.l2(h_parms.l2_norm))
+    self.wv = tf.keras.layers.Dense(d_model, kernel_regularizer = tf.keras.regularizers.l2(h_parms.l2_norm))
 
-    self.dense = tf.keras.layers.Dense(d_model, kernel_regularizer = tf.keras.regularizers.l2(config.l2_norm))
+    self.dense = tf.keras.layers.Dense(d_model, kernel_regularizer = tf.keras.regularizers.l2(h_parms.l2_norm))
         
   def split_heads(self, x, batch_size):
     """Split the last dimension into (num_heads, depth).
@@ -155,9 +144,9 @@ def point_wise_feed_forward_network(d_model, dff):
   return tf.keras.Sequential([
       tf.keras.layers.Dense(dff, 
                             activation='relu', 
-                            kernel_regularizer = tf.keras.regularizers.l2(config.l2_norm)),
+                            kernel_regularizer = tf.keras.regularizers.l2(h_parms.l2_norm)),
       tf.keras.layers.Dense(d_model, 
-                            kernel_regularizer = tf.keras.regularizers.l2(config.l2_norm))
+                            kernel_regularizer = tf.keras.regularizers.l2(h_parms.l2_norm))
   ])
 
 
@@ -293,7 +282,7 @@ class Decoder(tf.keras.layers.Layer):
       attention_weights['decoder_layer{}_block1'.format(i+1)] = block1
       attention_weights['decoder_layer{}_block2'.format(i+1)] = block2
     
-    if config.mean_attention_heads:
+    if h_parms.mean_attention_heads:
       # take mean of the block 2 attention heads of all the layers
       block2_attention_weights = tf.reduce_mean([(attention_weights[key]) for key in attention_weights.keys() if 'block2' in key], axis=0)
     else:

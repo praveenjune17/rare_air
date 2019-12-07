@@ -1,95 +1,34 @@
 # -*- coding: utf-8 -*-
+
 from __future__ import absolute_import, division, print_function, unicode_literals
-##########################################################################################
-#                       import the below packages
-#!pip install tensorflow
-#!pip install tensorflow-datasets
-#!pip install tensorflow-gan
-#!pip install tensorflow-probability
-#!pip install tensor2tensor
-#!pip install rouge==0.3.2
-#!pip install bunch
-#!tf_upgrade_v2 --infile c:/Users/pravech3/Summarization/beam_search.py --outfile c:/Users/pravech3/Summarization/beam_search.py
-###########################################################################################
-
-
-import sys
-sys.path.insert(0, '/content/drive/My Drive/Client_demo/scripts')
-
-
+#import sys
+#sys.path.insert(0, '/content/drive/My Drive/Client_demo/scripts')
 import tensorflow as tf
 tf.random.set_seed(100)
 import time
 import os
 import shutil
 import tensorflow_datasets as tfds
-from preprocess_v2 import create_train_data
+from preprocess import create_train_data
 from transformer import Transformer, Generator, create_masks
-from hyper_parameters import config
-from metrics import optimizer, loss_function, get_loss_and_accuracy, write_summary
+from hyper_parameters import h_parms
+from configuration import config
+from metrics import optimizer, loss_function, get_loss_and_accuracy, tf_write_summary
 from input_path import file_path
+from creates import log, train_summary_writer, valid_summary_writer
 from create_tokenizer import tokenizer_en
-import logging
 
 
-assert  (str(input('check the log file and set the last validation loss parameter ')) == 'ok'), 'Please change the hyper prameters and proceed with training model'
-if input('Remove summaries dir and tensorboard_logs ? reply "yes or no" ') == 'yes':
-  try:
-    shutil.rmtree(file_path.summary_write_path)
-    shutil.rmtree(file_path.tensorboard_log)
-  except FileNotFoundError:
-    pass
-
-
-#check for folders in the input_path script and create them if not exisist
-
-for key in file_path.keys():
-  if key == 'subword_vocab_path':
-    if not os.path.exists(file_path[key]+'.subwords'):
-      os.system('/content/drive/My\ Drive/Client_demo/scripts/create_tokenizer.py')
-  elif key in ['document', 'summary', 'new_checkpoint_path']:
-    pass
-  else:
-    if not os.path.exists(file_path[key]):
-      os.makedirs(file_path[key])
-      print(f'{key} directory created')
-
-# get TF logger
-log = logging.getLogger('tensorflow')
-log.setLevel(logging.DEBUG)
-
-# create formatter and add it to the handlers
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-# create file handler which logs even debug messages
-fh = logging.FileHandler('/content/drive/My Drive/Client_demo/created_files/tensorflow.log')
-fh.setLevel(logging.DEBUG)
-fh.setFormatter(formatter)
-log.addHandler(fh)
-
-
-if config.run_tensorboard:
-    from input_path  import train_summary_writer, valid_summary_writer
-else:
-    train_summary_writer = None
-    valid_summary_writer = None
-    
 train_dataset, val_dataset = create_train_data()
-inp, tar = next(iter(train_dataset))
-
-print()
-print(' Input samples to be trained')
-print()
-for ip,ta in zip(inp.numpy(), tar.numpy()):
-  print(tokenizer_en.decode([i for i in ta if i < tokenizer_en.vocab_size]))
-  print(tokenizer_en.decode([i for i in ip if i < tokenizer_en.vocab_size]))
-  break
-  
-print()
-print()
-
 train_loss, train_accuracy = get_loss_and_accuracy()
 validation_loss, validation_accuracy = get_loss_and_accuracy()
+
+if config.show_detokenized_samples:
+  inp, tar = next(iter(train_dataset))
+  for ip,ta in zip(inp.numpy(), tar.numpy()):
+    log.info(tokenizer_en.decode([i for i in ta if i < tokenizer_en.vocab_size]))
+    log.info(tokenizer_en.decode([i for i in ip if i < tokenizer_en.vocab_size]))
+    break
 
 transformer = Transformer(
         num_layers=config.num_layers, 
@@ -98,16 +37,9 @@ transformer = Transformer(
         dff=config.dff, 
         input_vocab_size=config.input_vocab_size, 
         target_vocab_size=config.target_vocab_size, 
-        rate=config.dropout_rate)
+        rate=h_parms.dropout_rate)
 generator   = Generator()
 
-
-
-# The @tf.function trace-compiles train_step into a TF graph for faster
-# execution. The function specializes to the precise shape of the argument
-# tensors. To avoid re-tracing due to the variable sequence lengths or variable
-# batch sizes (the last batch is smaller), use input_signature to specify
-# more generic shapes.
 
 train_step_signature = [
     tf.TensorSpec(shape=(None, None), dtype=tf.int64),
@@ -190,12 +122,6 @@ def val_step(inp, tar, inp_shape, tar_shape, batch):
   validation_loss(loss)
   validation_accuracy(tar_real, predictions)
   
-
-def tf_write_summary(tar_real, predictions, inp, epoch):
-  
-  return tf.py_function(write_summary, [tar_real, predictions, inp, epoch], Tout=[tf.float32, tf.float32])
-
-
 @tf.function(input_signature=val_step_with_summary_signature)
 def val_step_with_summary(inp, tar, epoch, inp_shape, tar_shape, batch):
   tar_inp = tar[:, :-1]
@@ -218,7 +144,7 @@ def val_step_with_summary(inp, tar, epoch, inp_shape, tar_shape, batch):
   validation_accuracy(tar_real, predictions)
   return tf_write_summary(tar_real, predictions, inp[:, 1:], epoch)
   
-
+# calculate rouge for only the first batch
 def calc_validation_loss(validation_dataset, epoch):
   validation_loss.reset_states()
   validation_accuracy.reset_states()
@@ -226,17 +152,15 @@ def calc_validation_loss(validation_dataset, epoch):
   val_loss = 0
   
   for (batch, (inp, tar)) in enumerate(validation_dataset):
-    # calculate rouge for only the first batch
     if batch == 0:
         rouge_score, bert_score = val_step_with_summary(inp, tar, epoch, inp.shape[1], tar.shape[1]-1, inp.shape[0])
     else:
-        #rouge = 'Calculated only for first batch'
         val_step(inp, tar, inp.shape[1], tar.shape[1]-1, inp.shape[0])
     val_loss += validation_loss.result()
     val_acc += validation_accuracy.result()
   return (val_acc.numpy()/(batch+1), val_loss.numpy()/(batch+1), rouge_score, bert_score)
 
-
+# if a checkpoint exists, restore the latest checkpoint.
 def check_ckpt(checkpoint_path):
     ckpt = tf.train.Checkpoint(transformer=transformer,
                            optimizer=optimizer,
@@ -244,49 +168,45 @@ def check_ckpt(checkpoint_path):
 
     ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=50)
     
-    # if a checkpoint exists, restore the latest checkpoint.
+    
     if tf.train.latest_checkpoint(checkpoint_path) and not config.from_scratch:
       ckpt.restore(tf.train.latest_checkpoint(checkpoint_path))
-      print (ckpt_manager.latest_checkpoint, 'checkpoint restored!!')
+      log.info(ckpt_manager.latest_checkpoint, 'checkpoint restored!!')
     else:
         ckpt_manager = tf.train.CheckpointManager(ckpt, file_path.new_checkpoint_path, max_to_keep=20)
-        print('Training from scratch')
+        log.info('Training from scratch')
     return ckpt_manager
 
-checkpoint_path=file_path.old_checkpoint_path
-epochs=config.epochs
-batch_size=config.batch_size
-ckpt_manager = check_ckpt(checkpoint_path)
+
 
 # get the latest checkpoint from the save directory
 if not config.from_scratch:
-  latest_ckpt = int(tf.train.latest_checkpoint(checkpoint_path)[-2:]) 
-# initialise tolerance to zero
-tolerance=0 
-for epoch in range(epochs):
+  latest_ckpt = int(tf.train.latest_checkpoint(file_path.old_checkpoint_path)[-2:]) 
+
+
+for epoch in range(h_parms.epochs):
   start = time.time()  
   train_loss.reset_states()
   train_accuracy.reset_states()
   validation_loss.reset_states()
   validation_accuracy.reset_states()
-  #print(f'Total parameters in this model {train_variables}')
   # inp -> document, tar -> summary
   for (batch, (inp, tar)) in enumerate(train_dataset):
   # the target is shifted right during training hence its shape is subtracted by 1
-    #not able to do this inside tf.function since it doesn't allow this operation
+  # not able to do this inside tf.function since it doesn't allow this operation
     train_step(inp, tar, inp.shape[1], tar.shape[1]-1, inp.shape[0])        
     if batch==0 and epoch ==0:
       log.info(transformer.summary())
       if config.copy_gen:
         log.info(generator.summary())
-      print('Time taken to feed the input data to the model {} seconds'.format(time.time()-start))
+      log.info('Time taken to feed the input data to the model {} seconds'.format(time.time()-start))
     if batch % config.print_chks == 0:
-      print ('Epoch {} Batch {} Train_Loss {:.4f} Train_Accuracy {:.4f}'.format(
+      log.info('Epoch {} Batch {} Train_Loss {:.4f} Train_Accuracy {:.4f}'.format(
         epoch + 1, batch, train_loss.result(), train_accuracy.result()))
   if config.from_scratch:
     latest_ckpt=epoch+1
   (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(val_dataset, epoch+1)
-  ckpt_save_path = ckpt_manager.save()
+  ckpt_save_path = check_ckpt(file_path.old_checkpoint_path).save()
   ckpt_fold, ckpt_string = os.path.split(ckpt_save_path)
 
   if config.run_tensorboard:
@@ -305,38 +225,42 @@ for epoch in range(epochs):
   if config.verbose:
 
     model_metrics = 'Epoch {}, Train Loss: {:.4f}, Train_Accuracy: {:.4f}, \
-                    Valid Loss: {:.4f},                   \
-                    Valid Accuracy: {:4f},                \
-                    ROUGE_score {},                             \
-                    BERT_SCORE {}'
+                     Valid Loss: {:.4f},                                   \
+                     Valid Accuracy: {:4f},                                \
+                     ROUGE_score {},                                       \
+                     BERT_SCORE {}'
     epoch_timing  = 'Time taken for {} epoch : {} secs' 
     checkpoint_details = 'Saving checkpoint for epoch {} at {}'
 
-    print(model_metrics.format(epoch+1,
+    log.info(model_metrics.format(epoch+1,
                          train_loss.result(), 
                          train_accuracy.result(),
                          val_loss, 
                          val_acc,
                          rouge_score,
                          bert_score))
-    print(epoch_timing.format(epoch + 1, time.time() - start))
-    print(checkpoint_details.format(epoch+1, ckpt_save_path))
+    log.info(epoch_timing.format(epoch + 1, time.time() - start))
+    log.info(checkpoint_details.format(epoch+1, ckpt_save_path))
 
-  if (latest_ckpt > config.look_only_after) and (config.last_validation_loss > val_loss):
+  if (latest_ckpt > config.monitor_only_after) and (config.last_validation_loss > val_loss):
     
     # reset tolerance to zero if the validation loss decreases before the tolerance threshold
-    tolerance=0
+    config.init_tolerance=0
     config.last_validation_loss =  val_loss
-    ckpt_files_tocopy = [files for files in os.listdir(os.path.split(ckpt_save_path)[0]) if ckpt_string in files]
-    log.info(f'Validation loss is {val_loss} so checkpoint files {ckpt_string} will be copied to best checkpoint directory')
+    ckpt_files_tocopy = [files for files in os.listdir(os.path.split(ckpt_save_path)[0]) \
+                         if ckpt_string in files]
+    log.info(f'Validation loss is {val_loss} so checkpoint files {ckpt_string}           \
+             will be copied to best checkpoint directory')
     shutil.copy2(os.path.join(ckpt_fold, 'checkpoint'), file_path.best_ckpt_path)
     for files in ckpt_files_tocopy:
         shutil.copy2(os.path.join(ckpt_fold, files), file_path.best_ckpt_path)
   else:
-    tolerance+=1
+    config.init_tolerance+=1
 
-  if config.early_stop and tolerance > config.tolerance_threshold:
-    print(f'Early stopping since the validation loss is not decreasing for quite a while and exceeded the tolerance threshold')
+  if config.init_tolerance > config.tolerance_threshold:
+    log.warning('Tolerance exceeded')
+  if config.early_stop and config.init_tolerance > config.tolerance_threshold:
+    log.info(f'Early stopping since the validation loss exceeded the tolerance threshold')
     break
   if train_loss.result() == 0:
     print('Train loss reached zero so stopping training')
