@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-
 from __future__ import absolute_import, division, print_function, unicode_literals
-#import sys
-#sys.path.insert(0, '/content/drive/My Drive/Client_demo/scripts')
+
 import tensorflow as tf
 tf.random.set_seed(100)
 import time

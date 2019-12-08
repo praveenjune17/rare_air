@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from bunch import Bunch
 
-
 hyp = {
  'copy_gen':True,
  'doc_length': 8096,

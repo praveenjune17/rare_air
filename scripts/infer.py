@@ -1,20 +1,17 @@
 # -*- coding: utf-8 -*-
-
 import tensorflow as tf
 tf.random.set_seed(100)
 import time
 import os
-import shutil
-import tensorflow_datasets as tfds
 from create_tokenizer import tokenizer_en
 from transformer import Transformer, Generator, create_masks
 from hyper_parameters import h_parms
 from configuration import config
-from metrics import optimizer, loss_function, get_loss_and_accuracy, tf_write_summary
+from metrics import optimizer
 from input_path import file_path
 from beam_search import beam_search
-from create_tokenizer import create_dataframe
 from preprocess import infer_data_from_df
+from creates import log
 
 def restore_chkpt(checkpoint_path):
     ckpt = tf.train.Checkpoint(
@@ -22,11 +19,9 @@ def restore_chkpt(checkpoint_path):
                                optimizer=optimizer,
                                generator=generator
                                )
-    
-    
-    assert tf.train.latest_checkpoint(os.path.split(checkpoint_path)[0]), 'checkpoint not available'
+    assert tf.train.latest_checkpoint(os.path.split(checkpoint_path)[0]), 'Incorrect checkpoint direcotry'
     ckpt.restore(checkpoint_path)
-    print (checkpoint_path, 'checkpoint restored!!')
+    log.info(checkpoint_path, 'checkpoint restored for inference!!')
 
 def beam_search_eval(document, beam_size):
   

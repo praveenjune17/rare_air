@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from bunch import Bunch
 
 file_path = {

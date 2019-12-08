@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import tensorflow as tf
 import numpy as np
 from configuration import config
@@ -10,11 +9,9 @@ from create_tokenizer import tokenizer_en
 from bert_score import score as b_score
 from creates import log
 
-rouge_all = Rouge()
-
 log.info('Loading Pre-trained BERT model for BERT SCORE calculation')
 _, _, _ = b_score(["I'm Batman"], ["I'm Spiderman"], lang='en', model_type='bert-base-uncased')
-
+rouge_all = Rouge()
 
 
 class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):

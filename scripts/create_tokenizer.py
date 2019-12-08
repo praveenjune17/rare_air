@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import pandas as pd
 import os
 import tensorflow_datasets as tfds
@@ -8,8 +7,8 @@ from creates import log
 
 def create_dataframe(path, num_examples):
     df = pd.read_csv(path)
-    assert len([i.capitalize() for i in df.columns if i.lower() in ['document', 'summary']]) == 2, 'Incorrect column names'
     df.columns = [i.capitalize() for i in df.columns if i.lower() in ['document', 'summary']]
+    assert len(df.columns) == 2, 'column names should be document and summary'
     df = df[:num_examples]
     assert not df.isnull().any().any(), 'dataset contains  nans'
     return (df[file_path.document].values, df[file_path.summary].values)
