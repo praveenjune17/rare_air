@@ -21,25 +21,21 @@ def encode(doc, summary):
 def filter_max_length(x, y):
     return tf.logical_and(tf.size(x) <= config.doc_length,
                         tf.size(y) <= config.summ_length)
-    
+
 def filter_token_size(x, y):
-    return tf.math.less_equal(h_parms.batch_size*(tf.size(x) + tf.size(y)), config.max_tokens_per_batch)
-
-
+    return tf.math.less_equal((tf.size(x) + tf.size(y)), config.max_tokens_per_batch)
+    
 def tf_encode(doc, summary):
     return tf.py_function(encode, [doc, summary], [tf.int64, tf.int64])
     
 def map_batch_shuffle(dataset, buffer_size, split, batch_size=h_parms.batch_size):
     tf_dataset = dataset.map(tf_encode, num_parallel_calls=AUTOTUNE)
-    tf_dataset = tf_dataset.filter(filter_token_size)
-    sum_of_records = sum(1 for l in tf_dataset)                                                                                   #TODO
     tf_dataset = tf_dataset.cache()
     if split == 'train':
         tf_dataset = tf_dataset.shuffle(buffer_size, seed = 100)
     tf_dataset = tf_dataset.padded_batch(batch_size, padded_shapes=([-1], [-1]))
+    tf_dataset = tf_dataset.filter(filter_token_size)
     tf_dataset = tf_dataset.prefetch(buffer_size=AUTOTUNE)
-    log.info(f'Number of {split} records  filtered {buffer_size - sum_of_records}')
-    log.info(f'Number of records to be {split}ed {sum_of_records}')
     return tf_dataset
     
 def create_train_data(num_samples_to_train = config.num_examples_to_train):

@@ -7,7 +7,7 @@ hyp = {
  'batch_size': 128,
  'beam_sizes': [2, 3, 4],        # Used only during inference                                                 #TODO for training
  'dropout_rate': 0.1,
- 'epochs': 50,
+ 'epochs': 2,
  'epsilon_ls': 0.1,              # label_smoothing hyper parameter
  'grad_clipnorm':None,
  'l2_norm':0,
