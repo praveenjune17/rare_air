@@ -1,5 +1,5 @@
 Addtional functionalities
-    *) Create new script called tensorflow ops
+	*) BERT SCORE for infer
 	a) convert metrics like BERT score, ROUGE score to Keras metrics
 	b) Generalize monitior metric, as of now only 'Valid loss' is being used
 	c) Gradient accumulation   (low priority)
