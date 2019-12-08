@@ -75,7 +75,7 @@ transformer = Transformer(
                           dff=config.dff, 
                           input_vocab_size=config.input_vocab_size, 
                           target_vocab_size=config.target_vocab_size, 
-                          rate=config.dropout_rate
+                          rate=h_parms.dropout_rate
                           )
 generator   = Generator()
 
