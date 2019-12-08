@@ -10,11 +10,10 @@ from create_tokenizer import tokenizer_en
 from transformer import Transformer, Generator, create_masks
 from hyper_parameters import h_parms
 from configuration import config
-from metrics import optimizer
 from input_path import file_path
 from beam_search import beam_search
 from preprocess import infer_data_from_df
-from creates import log
+
 
 transformer = Transformer(
                           num_layers=config.num_layers, 
@@ -33,8 +32,8 @@ def restore_chkpt(checkpoint_path):
                                generator=generator
                                )
     assert tf.train.latest_checkpoint(os.path.split(checkpoint_path)[0]), 'Incorrect checkpoint direcotry'
-    ckpt.restore(checkpoint_path)
-    log.info(f'{checkpoint_path} restored')
+    ckpt.restore(checkpoint_path).expect_partial()
+    print(f'{checkpoint_path} restored')
 
 def beam_search_eval(document, beam_size):
   
@@ -87,11 +86,14 @@ def run_inference(dataset, beam_sizes_to_try=h_parms.beam_sizes):
         start_time = time.time()
         # translated_output_temp[0] (batch, beam_size, summ_length+1)
         translated_output_temp = beam_search_eval(document, beam_size)
-        log.info('Original summary: {}'.format(tokenizer_en.decode([j for j in tf.squeeze(summary) if j < tokenizer_en.vocab_size])))
-        log.info('Predicted summary: {}'.format(tokenizer_en.decode([j for j in tf.squeeze(translated_output_temp[0][:,0,:]) if j < tokenizer_en.vocab_size])))
-        log.info(f'time to process document {doc_id} : {time.time()-start_time}')
-      log.info(f'############ Beam size {beam_size} completed #########')
+        print('Original summary: {}'.format(tokenizer_en.decode([j for j in tf.squeeze(summary) if j < tokenizer_en.vocab_size])))
+        print('Predicted summary: {}'.format(tokenizer_en.decode([j for j in tf.squeeze(translated_output_temp[0][:,0,:]) if j < tokenizer_en.vocab_size])))
+        print(f'time to process document {doc_id} : {time.time()-start_time}')
+      print(f'############ Beam size {beam_size} completed #########')
 
 #Restore the model's checkpoints
 restore_chkpt(file_path.infer_ckpt_path)
 infer_dataset = infer_data_from_df()
+
+if __name__ == '__main__':
+  run_inference(infer_dataset)
