@@ -30,7 +30,6 @@ generator   = Generator()
 def restore_chkpt(checkpoint_path):
     ckpt = tf.train.Checkpoint(
                                transformer=transformer,
-                               optimizer=optimizer,
                                generator=generator
                                )
     assert tf.train.latest_checkpoint(os.path.split(checkpoint_path)[0]), 'Incorrect checkpoint direcotry'
