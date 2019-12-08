@@ -71,7 +71,7 @@ def create_train_data(num_samples_to_train = config.num_examples_to_train):
                                      batch_size=h_parms.batch_size
                                      )
     log.info('Train and Test tf_datasets created')
-    return train_dataset, valid_dataset
+    return train_dataset, valid_dataset, train_buffer_size
     
 def infer_data_from_df(num_of_infer_examples=config.num_examples_to_infer):
     doc, summ = create_dataframe(file_path.infer_csv_path, num_of_infer_examples)
