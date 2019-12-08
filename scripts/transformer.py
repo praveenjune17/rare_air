@@ -356,13 +356,3 @@ class Generator(tf.keras.Model):
     combined_logits = tf.math.log(combined_probs)
     return combined_logits
     
-    
-transformer = Transformer(
-        num_layers=config.num_layers, 
-        d_model=config.d_model, 
-        num_heads=config.num_heads, 
-        dff=config.dff, 
-        input_vocab_size=config.input_vocab_size, 
-        target_vocab_size=config.target_vocab_size, 
-        rate=h_parms.dropout_rate)
-generator   = Generator()
