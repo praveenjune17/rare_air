@@ -213,7 +213,7 @@ for epoch in range(h_parms.epochs):
       tf.summary.scalar('validation_total_loss', val_acc, step=epoch)
       tf.summary.scalar('validation_total_accuracy', val_loss, step=epoch)
       tf.summary.scalar('ROUGE_score', rouge_score, step=epoch)
-      tf.summary.scalar('BERT_score', rouge_score, step=epoch)
+      tf.summary.scalar('BERT_score', bert_score, step=epoch)
 
   if config.verbose:
 

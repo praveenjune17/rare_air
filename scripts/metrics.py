@@ -79,8 +79,31 @@ def write_summary(tar_real, predictions, inp, epoch, write=config.write_summary_
   
   
 def tf_write_summary(tar_real, predictions, inp, epoch):
-  
   return tf.py_function(write_summary, [tar_real, predictions, inp, epoch], Tout=[tf.float32, tf.float32])
+  
+# calculate ROUGE-f1 and BERT-f1 for only the first batch
+def calc_validation_loss(validation_dataset, epoch):
+  calc_loss.reset_states()
+  calc_accuracy.reset_states()
+  val_acc = 0
+  val_loss = 0
+  
+  for (batch, (inp, tar)) in enumerate(validation_dataset):
+    if batch == 0:
+        rouge_score, bert_score = val_step_with_summary(inp, tar, epoch, inp.shape[1], tar.shape[1]-1, inp.shape[0])
+    else:
+        train_step(inp, tar, inp.shape[1], tar.shape[1]-1, inp.shape[0], False)
+    batch_valid_loss = calc_loss.result()
+    batch_valid_acc = calc_accuracy.result()
+    val_loss += batch_valid_loss
+    val_acc += batch_valid_acc
+    if config.run_tensorboard:
+        with valid_summary_writer.as_default():
+          tf.summary.scalar('batch_validation_loss', batch_valid_loss, step=epoch)
+          tf.summary.scalar('batch_validation_accuracy', batch_valid_acc, step=epoch)
+          tf.summary.scalar('ROUGE_score', rouge_score, step=epoch)
+          tf.summary.scalar('BERT_score', bert_score, step=epoch)
+  return (val_acc.numpy()/(batch+1), val_loss.numpy()/(batch+1), rouge_score, bert_score)
 
     
 lr = h_parms.learning_rate if h_parms.learning_rate else CustomSchedule(config.d_model)

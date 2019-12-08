@@ -2,6 +2,7 @@
 import tensorflow as tf
 import numpy as np
 from hyper_parameters import h_parms
+from configuration import config
 
 def get_angles(pos, i, d_model):
   angle_rates = 1 / np.power(10000, (2 * (i//2)) / np.float32(d_model))
@@ -354,3 +355,14 @@ class Generator(tf.keras.Model):
     combined_probs = vocab_dist + copy_probs + 0.0000001
     combined_logits = tf.math.log(combined_probs)
     return combined_logits
+    
+    
+transformer = Transformer(
+        num_layers=config.num_layers, 
+        d_model=config.d_model, 
+        num_heads=config.num_heads, 
+        dff=config.dff, 
+        input_vocab_size=config.input_vocab_size, 
+        target_vocab_size=config.target_vocab_size, 
+        rate=h_parms.dropout_rate)
+generator   = Generator()
