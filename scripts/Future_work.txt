@@ -1,8 +1,7 @@
 Addtional functionalities
-	*) BERT SCORE for infer
+        *) beam_search while calculating metrics
 	a) convert metrics like BERT score, ROUGE score to Keras metrics
 	b) Generalize monitior metric, as of now only 'Valid loss' is being used
 	c) Gradient accumulation   (low priority)
 	d) Convert tf.py_funcitons to tf.functions 
-	e) Remove breaks and use KERAS callbacks for early stop
 	f) run the script to check karpathy's suggestions
