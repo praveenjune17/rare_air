@@ -17,6 +17,15 @@ from creates import log, train_summary_writer, valid_summary_writer
 from create_tokenizer import tokenizer_en
 from local_tf_ops import *
 
+assert(str(input('set the last_validation_loss parameter,reply "ok" if set ')) == 'ok'), \
+            'Please change the hyper prameters and proceed with training model'
+            
+if input('Remove summaries dir and tensorboard_logs ? reply "yes or no" ') == 'yes':
+  try:
+    shutil.rmtree(file_path.summary_write_path)
+    shutil.rmtree(file_path.tensorboard_log)
+  except FileNotFoundError:
+    pass
 
 train_dataset, val_dataset, num_of_train_examples = create_train_data()
 train_loss, train_accuracy = get_loss_and_accuracy()
