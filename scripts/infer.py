@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-import sys
-sys.path.insert(0, '/content/rare_air/scripts')
-
 import tensorflow as tf
 tf.random.set_seed(100)
 import time
 import os
+import numpy as np
 from create_tokenizer import tokenizer_en
 from transformer import Transformer, Generator, create_masks
 from hyper_parameters import h_parms
@@ -13,7 +11,13 @@ from configuration import config
 from input_path import file_path
 from beam_search import beam_search
 from preprocess import infer_data_from_df
+from rouge import Rouge
+from bert_score import score as b_score
+rouge_all = Rouge()
 
+infer_template = '''Beam size <--- {}\
+                    ROUGE-f1  <--- {}\
+                    BERT-f1   <--- {}'''
 
 transformer = Transformer(
                           num_layers=config.num_layers, 
@@ -82,14 +86,23 @@ def beam_search_eval(document, beam_size):
 
 def run_inference(dataset, beam_sizes_to_try=h_parms.beam_sizes):
     for beam_size in beam_sizes_to_try:
+      total_summary = []
       for (doc_id, (document, summary)) in enumerate(dataset, 1):
         start_time = time.time()
         # translated_output_temp[0] (batch, beam_size, summ_length+1)
         translated_output_temp = beam_search_eval(document, beam_size)
+        sum_ref = tokenizer_en.decode([j for j in tf.squeeze(summary) if j < tokenizer_en.vocab_size])
+        sum_hyp = tokenizer_en.decode([j for j in tf.squeeze(translated_output_temp[0][:,0,:]) if j < tokenizer_en.vocab_size])
+        total_summary.append((sum_ref, sum_hyp))
         print('Original summary: {}'.format(tokenizer_en.decode([j for j in tf.squeeze(summary) if j < tokenizer_en.vocab_size])))
         print('Predicted summary: {}'.format(tokenizer_en.decode([j for j in tf.squeeze(translated_output_temp[0][:,0,:]) if j < tokenizer_en.vocab_size])))
-        print(f'time to process document {doc_id} : {time.time()-start_time}')
-      print(f'############ Beam size {beam_size} completed #########')
+      ref_sents = [ref for ref, _ in total_summary]
+      hyp_sents = [hyp for _, hyp in total_summary]
+      rouges = rouge_all.get_scores(ref_sents , hyp_sents)
+      avg_rouge_f1 = np.mean([np.mean([rouge_scores['rouge-1']["f"], rouge_scores['rouge-2']["f"], rouge_scores['rouge-l']["f"]]) for rouge_scores in rouges])
+      _, _, bert_f1 = b_score(ref_sents, hyp_sents, lang='en', model_type='bert-base-uncased')
+      print(infer_template.format(beam_size, avg_rouge_f1, np.mean(bert_f1.numpy())))
+      print(f'time to process document {doc_id} : {time.time()-start_time}') 
 
 #Restore the model's checkpoints
 restore_chkpt(file_path.infer_ckpt_path)
