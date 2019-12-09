@@ -2,7 +2,6 @@
 import datetime
 import tensorflow as tf
 import os
-import shutil
 import logging
 from hyper_parameters import h_parms
 from configuration import config
@@ -25,16 +24,6 @@ if not tf.test.is_gpu_available():
 def check_and_create_dir(path):
     if not os.path.exists(path):
         os.makedirs(path)
-
-assert(str(input('set the last_validation_loss parameter,reply "ok" if set ')) == 'ok'), \
-            'Please change the hyper prameters and proceed with training model'
-            
-if input('Remove summaries dir and tensorboard_logs ? reply "yes or no" ') == 'yes':
-  try:
-    shutil.rmtree(file_path.summary_write_path)
-    shutil.rmtree(file_path.tensorboard_log)
-  except FileNotFoundError:
-    pass
 
 if config.run_tensorboard:
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
