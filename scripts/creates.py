@@ -60,5 +60,5 @@ monitor_metrics['combined_metric'] = (
                                       monitor_metrics['ROUGE_f1'], 
                                       monitor_metrics['validation_accuracy']
                                       )
-assert (to_monitor in monitor_metrics.keys()), f'Available metrics to monitor are {monitor_metrics.keys()}'
+assert (config.monitor_metric in monitor_metrics.keys()), f'Available metrics to monitor are {monitor_metrics.keys()}'
 assert (tf.reduce_sum(h_parms.combined_metric_weights) == 1), 'weights should sum to 1'
