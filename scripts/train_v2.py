@@ -180,8 +180,9 @@ for epoch in range(h_parms.epochs):
     if batch % config.print_chks == 0:
       log.info(batch_run_details.format(
         epoch + 1, batch, train_loss.result(), train_accuracy.result()))
-  data_after_filter = ((batch-1)*h_parms.batch_size)/num_of_train_examples
-  log.info(f'Atleast {data_after_filter*100}% of training data is used')
+  if epoch == 0:
+    data_after_filter = ((batch-1)*h_parms.batch_size)/num_of_train_examples
+    log.info(f'Atleast {data_after_filter*100}% of training data is used')
   (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(val_dataset, epoch+1)
   ckpt_save_path = ck_pt_mgr.save()
   ckpt_fold, ckpt_string = os.path.split(ckpt_save_path)
