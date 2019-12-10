@@ -104,7 +104,7 @@ def monitor_run(latest_ckpt, val_loss, val_acc, bert_score, rouge_score, to_moni
   else:
     last_recorded_value = float('inf')
     cond = (last_recorded_value > monitor_metrics[monitor])
-  if (latest_ckpt > monitor_only_after) and cond:
+  if (latest_ckpt > config.monitor_only_after) and cond:
     # reset tolerance to zero if the validation loss decreases before the tolerance threshold
     config.init_tolerance=0
     last_recorded_value =  monitor_metrics[to_monitor]
