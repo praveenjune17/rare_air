@@ -47,3 +47,18 @@ for key in file_path.keys():
     if not os.path.exists(file_path[key]):
       check_and_create_dir(file_path[key])
       log.info(f'{key} directory created')
+
+# create metrics dict
+
+monitor_metrics = dict()
+monitor_metrics['validation_loss'] = None
+monitor_metrics['BERT_f1'] = None
+monitor_metrics['ROUGE_f1'] = None
+monitor_metrics['validation_accuracy'] = None
+monitor_metrics['combined_metric'] = (
+                                      monitor_metrics['BERT_f1'], 
+                                      monitor_metrics['ROUGE_f1'], 
+                                      monitor_metrics['validation_accuracy']
+                                      )
+assert (to_monitor in monitor_metrics.keys()), f'Available metrics to monitor are {monitor_metrics.keys()}'
+assert (tf.reduce_sum(h_parms.combined_metric_weights) == 1), 'weights should sum to 1'
