@@ -181,8 +181,8 @@ for epoch in range(h_parms.epochs):
       log.info(batch_run_details.format(
         epoch + 1, batch, train_loss.result(), train_accuracy.result()))
   if epoch == 0:
-    data_after_filter = ((batch-1)*h_parms.batch_size)/num_of_train_examples
-    log.info(f'Atleast {data_after_filter*100}% of training data is used')
+    num_of_recs_post_filter = ((batch-1)*h_parms.batch_size)/num_of_train_examples
+    log.info(f'Atleast {num_of_recs_post_filter*100}% of training data is used')
   (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(val_dataset, epoch+1)
   ckpt_save_path = ck_pt_mgr.save()
   ckpt_fold, ckpt_string = os.path.split(ckpt_save_path)
@@ -191,7 +191,6 @@ for epoch in range(h_parms.epochs):
     with train_summary_writer.as_default():
       tf.summary.scalar('train_loss', train_loss.result(), step=epoch)
       tf.summary.scalar('train_accuracy', train_accuracy.result(), step=epoch)
-
     with valid_summary_writer.as_default():
       tf.summary.scalar('validation_loss', validation_loss.result(), step=epoch)
       tf.summary.scalar('validation_accuracy', validation_accuracy.result(), step=epoch)
@@ -199,17 +198,14 @@ for epoch in range(h_parms.epochs):
       tf.summary.scalar('validation_total_accuracy', val_loss, step=epoch)
       tf.summary.scalar('ROUGE_score', rouge_score, step=epoch)
       tf.summary.scalar('BERT_score', bert_score, step=epoch)
-
-  if config.verbose:
-    log.info(model_metrics.format(epoch+1,
-                         train_loss.result(), 
-                         train_accuracy.result(),
-                         val_loss, 
-                         val_acc,
-                         rouge_score,
-                         bert_score))
-    log.info(epoch_timing.format(epoch + 1, time.time() - start))
-    log.info(checkpoint_details.format(epoch+1, ckpt_save_path))
+  log.info(
+           model_metrics.format(epoch+1, train_loss.result(), 
+           train_accuracy.result(),
+           val_loss, val_acc,
+           rouge_score, bert_score)
+          )
+  log.info(epoch_timing.format(epoch + 1, time.time() - start))
+  log.info(checkpoint_details.format(epoch+1, ckpt_save_path))
   monitor_run(latest_ckpt, val_loss, val_acc, bert_score, rouge_score)
 
   
