@@ -49,7 +49,6 @@ for key in file_path.keys():
       log.info(f'{key} directory created')
 
 # create metrics dict
-
 monitor_metrics = dict()
 monitor_metrics['validation_loss'] = None
 monitor_metrics['BERT_f1'] = None

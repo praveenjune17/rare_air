@@ -22,13 +22,11 @@ class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
     
     self.d_model = d_model
     self.d_model = tf.cast(self.d_model, tf.float32)
-
     self.warmup_steps = warmup_steps
     
   def __call__(self, step):
     arg1 = tf.math.rsqrt(step)
     arg2 = step * (self.warmup_steps ** -1.5)
-    
     return tf.math.rsqrt(self.d_model) * tf.math.minimum(arg1, arg2)
 
 
@@ -41,13 +39,10 @@ def label_smoothing(inputs, epsilon=h_parms.epsilon_ls):
 def loss_function(real, pred):
   mask = tf.math.logical_not(tf.math.equal(real, 0))
   real = label_smoothing(tf.one_hot(real, depth=tokenizer_en.vocab_size+2))
-  # pred shape =  (batch_size, tar_seq_len, target_vocab_size)
-  # real shape =  (batch_size, tar_seq_len, target_vocab_size)
+  # pred shape == real shape = (batch_size, tar_seq_len, target_vocab_size)
   loss_ = loss_object(real, pred)
-
   mask = tf.cast(mask, dtype=loss_.dtype)
   loss_ *= mask
-  
   return tf.reduce_mean(loss_)
 
 def get_loss_and_accuracy():
@@ -83,6 +78,7 @@ def write_summary(tar_real, predictions, inp, epoch, write=config.write_summary_
 def tf_write_summary(tar_real, predictions, inp, epoch):
   return tf.py_function(write_summary, [tar_real, predictions, inp, epoch], Tout=[tf.float32, tf.float32])
     
+
 def monitor_run(latest_ckpt, val_loss, val_acc, bert_score, rouge_score, to_monitor=config.monitor_metric):
   monitor_metrics = dict()
   monitor_metrics['validation_loss'] = val_loss
@@ -97,17 +93,15 @@ def monitor_run(latest_ckpt, val_loss, val_acc, bert_score, rouge_score, to_moni
   # multiply with the weights                                    
   monitor_metrics['combined_metric'] = round(tf.reduce_sum([(i*j) for i,j in zip(monitor_metrics['combined_metric'],  
                                                                                  h_parms.combined_metric_weights)]).numpy(), 2)
-  log.info(f"combined metric {monitor_metrics['combined_metric']}")
+  log.info(f"combined_metric {monitor_metrics['combined_metric']}")
   if to_monitor != 'validation_loss':
-    last_recorded_value = 0
-    cond = (last_recorded_value < monitor_metrics[to_monitor])
+    cond = (config.last_recorded_value < monitor_metrics[to_monitor])
   else:
-    last_recorded_value = float('inf')
-    cond = (last_recorded_value > monitor_metrics[monitor])
+    cond = (config.last_recorded_value > monitor_metrics[monitor])
   if (latest_ckpt > config.monitor_only_after) and cond:
-    # reset tolerance to zero if the validation loss decreases before the tolerance threshold
+    # reset tolerance to zero if the monitor_metric decreases before the tolerance threshold
     config.init_tolerance=0
-    last_recorded_value =  monitor_metrics[to_monitor]
+    config.last_recorded_value =  monitor_metrics[to_monitor]
     ckpt_files_tocopy = [files for files in os.listdir(os.path.split(ckpt_save_path)[0]) \
                          if ckpt_string in files]
     log.info(f'{to_monitor} is {monitor_metrics[to_monitor]} so checkpoint files {ckpt_string}           \
@@ -123,7 +117,9 @@ def monitor_run(latest_ckpt, val_loss, val_acc, bert_score, rouge_score, to_moni
     log.warning('Tolerance exceeded')
   if config.early_stop and config.init_tolerance > config.tolerance_threshold:
     log.info(f'Early stopping since the {to_monitor} reached the tolerance threshold')
-    return
+    return False
+  else:
+    return True
 lr = h_parms.learning_rate if h_parms.learning_rate else CustomSchedule(config.d_model)
     
 if h_parms.grad_clipnorm:

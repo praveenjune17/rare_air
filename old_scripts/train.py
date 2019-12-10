@@ -11,7 +11,7 @@ from preprocess import create_train_data
 from transformer import Transformer, Generator, create_masks
 from hyper_parameters import h_parms
 from configuration import config
-from metrics import optimizer, loss_function, get_loss_and_accuracy, tf_write_summary, monitor_run
+from metrics import optimizer, loss_function, get_loss_and_accuracy, tf_write_summary
 from input_path import file_path
 from creates import log, train_summary_writer, valid_summary_writer
 from create_tokenizer import tokenizer_en
@@ -180,9 +180,8 @@ for epoch in range(h_parms.epochs):
     if batch % config.print_chks == 0:
       log.info(batch_run_details.format(
         epoch + 1, batch, train_loss.result(), train_accuracy.result()))
-  if epoch == 0:
-    num_of_recs_post_filter = ((batch-1)*h_parms.batch_size)/num_of_train_examples
-    log.info(f'Atleast {num_of_recs_post_filter*100}% of training data is used')
+  data_after_filter = ((batch-1)*h_parms.batch_size)/num_of_train_examples
+  log.info(f'Atleast {data_after_filter*100}% of training data is used')
   (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(val_dataset, epoch+1)
   ckpt_save_path = ck_pt_mgr.save()
   ckpt_fold, ckpt_string = os.path.split(ckpt_save_path)
@@ -191,6 +190,7 @@ for epoch in range(h_parms.epochs):
     with train_summary_writer.as_default():
       tf.summary.scalar('train_loss', train_loss.result(), step=epoch)
       tf.summary.scalar('train_accuracy', train_accuracy.result(), step=epoch)
+
     with valid_summary_writer.as_default():
       tf.summary.scalar('validation_loss', validation_loss.result(), step=epoch)
       tf.summary.scalar('validation_accuracy', validation_accuracy.result(), step=epoch)
@@ -198,14 +198,47 @@ for epoch in range(h_parms.epochs):
       tf.summary.scalar('validation_total_accuracy', val_loss, step=epoch)
       tf.summary.scalar('ROUGE_score', rouge_score, step=epoch)
       tf.summary.scalar('BERT_score', bert_score, step=epoch)
-  log.info(
-           model_metrics.format(epoch+1, train_loss.result(), 
-           train_accuracy.result(),
-           val_loss, val_acc,
-           rouge_score, bert_score)
-          )
-  log.info(epoch_timing.format(epoch + 1, time.time() - start))
-  log.info(checkpoint_details.format(epoch+1, ckpt_save_path))
-  monitor_run(latest_ckpt, val_loss, val_acc, bert_score, rouge_score)
 
-  
+  if config.verbose:
+
+    model_metrics = 'Epoch {}, Train Loss: {:.4f}, Train_Accuracy: {:.4f}, \
+                     Valid Loss: {:.4f},                                   \
+                     Valid Accuracy: {:4f},                                \
+                     ROUGE_score {},                                       \
+                     BERT_SCORE {}'
+    epoch_timing  = 'Time taken for {} epoch : {} secs' 
+    checkpoint_details = 'Saving checkpoint for epoch {} at {}'
+
+    log.info(model_metrics.format(epoch+1,
+                         train_loss.result(), 
+                         train_accuracy.result(),
+                         val_loss, 
+                         val_acc,
+                         rouge_score,
+                         bert_score))
+    log.info(epoch_timing.format(epoch + 1, time.time() - start))
+    log.info(checkpoint_details.format(epoch+1, ckpt_save_path))
+
+  if (latest_ckpt > config.monitor_only_after) and (config.last_validation_loss > val_loss):
+    
+    # reset tolerance to zero if the validation loss decreases before the tolerance threshold
+    config.init_tolerance=0
+    config.last_validation_loss =  val_loss
+    ckpt_files_tocopy = [files for files in os.listdir(os.path.split(ckpt_save_path)[0]) \
+                         if ckpt_string in files]
+    log.info(f'Validation loss is {val_loss} so checkpoint files {ckpt_string}           \
+             will be copied to best checkpoint directory')
+    shutil.copy2(os.path.join(ckpt_fold, 'checkpoint'), file_path.best_ckpt_path)
+    for files in ckpt_files_tocopy:
+        shutil.copy2(os.path.join(ckpt_fold, files), file_path.best_ckpt_path)
+  else:
+    config.init_tolerance+=1
+
+  if config.init_tolerance > config.tolerance_threshold:
+    log.warning('Tolerance exceeded')
+  if config.early_stop and config.init_tolerance > config.tolerance_threshold:
+    log.info(f'Early stopping since the validation loss exceeded the tolerance threshold')
+    break
+  if train_loss.result() == 0:
+    log.info('Train loss reached zero so stopping training')
+    break

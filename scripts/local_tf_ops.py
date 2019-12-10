@@ -25,11 +25,13 @@ val_step_with_summary_signature = [
     tf.TensorSpec(shape=(None), dtype=tf.int32),
 ]
   
-model_metrics = 'Epoch {}, Train Loss: {:.4f}, Train_Accuracy: {:.4f}, \
-                     Valid Loss: {:.4f},                                \
-                     Valid Accuracy: {:4f},                              \
-                     ROUGE_score {:4f},                                   \
-                     BERT_SCORE {:4f}'
+model_metrics = 'Epoch {}\n,\
+                 Train Loss {:.4f}\n,\
+                 Train_Accuracy {:.4f}\n,\
+                 validation_loss {:.4f}\n,\
+                 validation_accuracy {:4f}\n,\
+                 ROUGE_f1 {:4f}\n,\
+                 BERT_f1 {:4f}\n'
 epoch_timing  = 'Time taken for {} epoch : {} secs' 
 checkpoint_details = 'Saving checkpoint for epoch {} at {}'
 batch_zero = 'Time taken to feed the input data to the model {} seconds'
