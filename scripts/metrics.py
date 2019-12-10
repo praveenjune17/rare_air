@@ -97,7 +97,7 @@ def monitor_run(latest_ckpt, val_loss, val_acc, bert_score, rouge_score, to_moni
   # multiply with the weights                                    
   monitor_metrics['combined_metric'] = round(tf.reduce_sum([(i*j) for i,j in zip(monitor_metrics['combined_metric'],  
                                                                                  h_parms.combined_metric_weights)]).numpy(), 2)
-     
+  log.info(f"combined metric {monitor_metrics['combined_metric']}")
   if to_monitor != 'validation_loss':
     last_recorded_value = 0
     cond = (last_recorded_value < monitor_metrics[to_monitor])
