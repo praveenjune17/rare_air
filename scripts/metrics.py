@@ -63,11 +63,16 @@ def write_summary(tar_real, predictions, inp, epoch, write=config.write_summary_
   ref_sents = [ref for ref, _ in total_summary]
   hyp_sents = [hyp for _, hyp in total_summary]
   # returns :- dict of dicts
-  rouges = rouge_all.get_scores(ref_sents , hyp_sents)
-  avg_rouge_f1 = np.mean([np.mean([rouge_scores['rouge-1']["f"], rouge_scores['rouge-2']["f"], rouge_scores['rouge-l']["f"]]) for rouge_scores in rouges])
-  _, _, bert_f1 = b_score(ref_sents, hyp_sents, lang='en', model_type='bert-base-uncased')
-  rouge_score =  avg_rouge_f1.astype('float64')
-  bert_f1_score =  np.mean(bert_f1.tolist(), dtype=np.float64)
+  if ref_sents and hyp_sents:  
+      rouges = rouge_all.get_scores(ref_sents , hyp_sents)
+      avg_rouge_f1 = np.mean([np.mean([rouge_scores['rouge-1']["f"], rouge_scores['rouge-2']["f"], rouge_scores['rouge-l']["f"]]) for rouge_scores in rouges])
+      _, _, bert_f1 = b_score(ref_sents, hyp_sents, lang='en', model_type='bert-base-uncased')
+      rouge_score =  avg_rouge_f1.astype('float64')
+      bert_f1_score =  np.mean(bert_f1.tolist(), dtype=np.float64)
+  else:
+      rouge_score = 0
+      bert_f1_score = 0
+  
   if write and (epoch)%config.write_per_epoch == 0:
     with tf.io.gfile.GFile(file_path.summary_write_path+str(epoch.numpy()), 'w') as f:
       for ref, hyp in total_summary:
@@ -93,7 +98,7 @@ def monitor_run(latest_ckpt, val_loss, val_acc, bert_score, rouge_score, to_moni
   # multiply with the weights                                    
   monitor_metrics['combined_metric'] = round(tf.reduce_sum([(i*j) for i,j in zip(monitor_metrics['combined_metric'],  
                                                                                  h_parms.combined_metric_weights)]).numpy(), 2)
-  log.info(f"combined_metric {monitor_metrics['combined_metric']}")
+  log.info(f"combined_metric {monitor_metrics['combined_metric']:4f}")
   if to_monitor != 'validation_loss':
     cond = (config.last_recorded_value < monitor_metrics[to_monitor])
   else:
