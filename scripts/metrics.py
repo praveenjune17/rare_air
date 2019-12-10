@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 import tensorflow as tf
 import numpy as np
+import shutil
+import os
 from configuration import config
 from hyper_parameters import h_parms
 from rouge import Rouge
 from input_path import file_path
 from create_tokenizer import tokenizer_en
 from bert_score import score as b_score
-from creates import log
+from creates import log, monitor_metrics
 
 log.info('Loading Pre-trained BERT model for BERT SCORE calculation')
 _, _, _ = b_score(["I'm Batman"], ["I'm Spiderman"], lang='en', model_type='bert-base-uncased')
@@ -81,6 +83,46 @@ def write_summary(tar_real, predictions, inp, epoch, write=config.write_summary_
 def tf_write_summary(tar_real, predictions, inp, epoch):
   return tf.py_function(write_summary, [tar_real, predictions, inp, epoch], Tout=[tf.float32, tf.float32])
     
+def monitor_run(latest_ckpt, val_loss, val_acc, bert_score, rouge_score, to_monitor=config.monitor):
+  monitor_metrics = dict()
+  monitor_metrics['validation_loss'] = val_loss
+  monitor_metrics['validation_accuracy'] = val_acc
+  monitor_metrics['BERT_f1'] = bert_score
+  monitor_metrics['ROUGE_f1'] = rouge_score
+  monitor_metrics['combined_metric'] = (
+                                        monitor_metrics['BERT_f1'], 
+                                        monitor_metrics['ROUGE_f1'], 
+                                        monitor_metrics['validation_accuracy']
+                                        )
+  # multiply with the weights                                    
+  monitor_metrics['combined_metric'] = round(tf.reduce_sum([(i*j) for i,j in zip(monitor_metrics['combined_metric'], h_parms.combined_metric_weights)]).numpy(), 2)
+     
+  if to_monitor != 'validation_loss':
+    last_recorded_value = 0
+    cond = (last_recorded_value < monitor_metrics[to_monitor])
+  else:
+    last_recorded_value = float('inf')
+    cond = (last_recorded_value > monitor_metrics[monitor])
+  if (latest_ckpt > monitor_only_after) and cond:
+    # reset tolerance to zero if the validation loss decreases before the tolerance threshold
+    config.init_tolerance=0
+    last_recorded_value =  monitor_metrics[to_monitor]
+    ckpt_files_tocopy = [files for files in os.listdir(os.path.split(ckpt_save_path)[0]) \
+                         if ckpt_string in files]
+    log.info(f'{to_monitor} is {monitor_metrics[to_monitor]} so checkpoint files {ckpt_string}           \
+             will be copied to best checkpoint directory')
+    # copy the best checkpoints
+    shutil.copy2(os.path.join(ckpt_fold, 'checkpoint'), file_path.best_ckpt_path)
+    for files in ckpt_files_tocopy:
+        shutil.copy2(os.path.join(ckpt_fold, files), file_path.best_ckpt_path)
+  else:
+    config.init_tolerance+=1
+  # Warn and early stop
+  if config.init_tolerance > config.tolerance_threshold:
+    log.warning('Tolerance exceeded')
+  if config.early_stop and config.init_tolerance > config.tolerance_threshold:
+    log.info(f'Early stopping since the {to_monitor} reached the tolerance threshold')
+    return
 lr = h_parms.learning_rate if h_parms.learning_rate else CustomSchedule(config.d_model)
     
 if h_parms.grad_clipnorm:
