@@ -9,7 +9,7 @@ hyp = {
  'early_stop' : False,
  'init_tolerance':0,
  'input_vocab_size': 8167,        # total vocab size + start and end token
- 'last_validation_loss' : float('inf'),
+ 'monitor_metric' : 'combined_metric',
  'monitor_only_after': 10,        # monitor the validation loss only after this epoch                                         # Generalaise monitor metric #TODO
  'max_tokens_per_batch': 20000,
  'minimum_train_loss': 0.1,
