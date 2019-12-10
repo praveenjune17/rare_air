@@ -5,6 +5,7 @@ hyp = {
  'accumulation_steps': 3.0,                                                                                   # TODO
  'batch_size': 128,
  'beam_sizes': [2, 3, 4],        # Used only during inference                                                 #TODO for training
+ 'combined_metric_weights': [0.6, 0.2, 0.2], #(bert_score, rouge, validation accuracy)
  'dropout_rate': 0.1,
  'epochs': 2,
  'epsilon_ls': 0.1,              # label_smoothing hyper parameter
