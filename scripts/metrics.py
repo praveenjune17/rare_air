@@ -83,7 +83,7 @@ def write_summary(tar_real, predictions, inp, epoch, write=config.write_summary_
 def tf_write_summary(tar_real, predictions, inp, epoch):
   return tf.py_function(write_summary, [tar_real, predictions, inp, epoch], Tout=[tf.float32, tf.float32])
     
-def monitor_run(latest_ckpt, val_loss, val_acc, bert_score, rouge_score, to_monitor=config.monitor):
+def monitor_run(latest_ckpt, val_loss, val_acc, bert_score, rouge_score, to_monitor=config.monitor_metric):
   monitor_metrics = dict()
   monitor_metrics['validation_loss'] = val_loss
   monitor_metrics['validation_accuracy'] = val_acc
@@ -95,7 +95,8 @@ def monitor_run(latest_ckpt, val_loss, val_acc, bert_score, rouge_score, to_moni
                                         monitor_metrics['validation_accuracy']
                                         )
   # multiply with the weights                                    
-  monitor_metrics['combined_metric'] = round(tf.reduce_sum([(i*j) for i,j in zip(monitor_metrics['combined_metric'], h_parms.combined_metric_weights)]).numpy(), 2)
+  monitor_metrics['combined_metric'] = round(tf.reduce_sum([(i*j) for i,j in zip(monitor_metrics['combined_metric'],  
+                                                                                 h_parms.combined_metric_weights)]).numpy(), 2)
      
   if to_monitor != 'validation_loss':
     last_recorded_value = 0
