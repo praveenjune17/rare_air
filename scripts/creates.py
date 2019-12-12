@@ -8,6 +8,21 @@ from configuration import config
 from input_path import file_path
 
 
+def check_and_create_dir(path):
+    if not os.path.exists(path):
+      os.makedirs(path)
+      print(f'directory {path} created ')
+
+# create folder in input_path if they don't exist
+if not config.use_tfds:
+  assert (os.path.exists(file_path['train_csv_path'])), 'Training dataset not available'
+for key in file_path.keys():
+  if key in ['infer_ckpt_path' , 'subword_vocab_path']:
+    pass
+  else:
+      if os.path.splitext(file_path[key])[1] == '':
+        check_and_create_dir(file_path[key])
+      
 # get TF logger
 log = logging.getLogger('tensorflow')
 log.setLevel(logging.DEBUG)
@@ -19,11 +34,7 @@ log.addHandler(fh)
 log.propagate = False
 
 if not tf.test.is_gpu_available():
-    log.info("GPU Not available so Running in CPU")
-
-def check_and_create_dir(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
+    log.warning("GPU Not available so Running in CPU")
 
 if config.run_tensorboard:
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -34,20 +45,7 @@ if config.run_tensorboard:
 else:
     train_summary_writer = None
     valid_summary_writer = None
-    
-# check for folders in the input_path script and create them if they do not exist
-# creat vocab file if not exist
-for key in file_path.keys():
-  if key == 'subword_vocab_path':
-    if not os.path.exists(file_path[key]+'.subwords'):
-      os.system(os.path.join(os.getcwd(), 'create_tokenizer.py'))
-  elif key in ['document', 'summary', 'new_checkpoint_path', 'infer_ckpt_path' ,'log_path']:
-    pass
-  else:
-    if not os.path.exists(file_path[key]):
-      check_and_create_dir(file_path[key])
-      log.info(f'{key} directory created')
-
+        
 # create metrics dict
 monitor_metrics = dict()
 monitor_metrics['validation_loss'] = None

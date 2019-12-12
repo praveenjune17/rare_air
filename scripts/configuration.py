@@ -9,11 +9,11 @@ hyp = {
  'dff': 512,                      # feed forward network hidden parameters
  'early_stop' : False,
  'init_tolerance':0,
- 'input_vocab_size': 8167,        # total vocab size + start and end token
+ 'input_vocab_size': 8211,        # total vocab size + start and end token
  'last_recorded_value': None,
  'monitor_metric' : 'combined_metric',
  'monitor_only_after': 5,        # monitor the monitor_metric only after this epoch                                         
- 'max_tokens_per_batch': 15500,
+ 'max_tokens_per_batch': 11500,
  'minimum_train_loss': 0.1,
  'num_examples_to_train': None,   #If None then all the examples in the dataset will be used to train
  'num_examples_to_infer': None,
@@ -23,12 +23,12 @@ hyp = {
  'run_tensorboard': False,
  'show_detokenized_samples' : False,
  'summ_length': 1340,
- 'target_vocab_size': 8167,       # total vocab size + start and end token
+ 'target_vocab_size': 8211,       # total vocab size + start and end token
  'test_size': 0.05,               # used when the input is supplied as a csv file
  'tolerance_threshold': 10,       # counter which does early stopping
  'use_tfds' : True,               # use tfds datasets as input to the model (default :- Gigaword )
  'verbose': True,
- 'write_per_epoch': 5,            # write summary for every specified epoch
+ 'write_per_epoch': 1,            # write summary for every specified epoch
  'write_summary_op': True         # write valdiaiton summary to hardisk
  }                                    
 
