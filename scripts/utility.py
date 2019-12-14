@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from preprocess import create_train_data
 
-train_dataset, val_dataset, num_of_train_examples = create_train_data(shuffle=False)
+#train_dataset, val_dataset, num_of_train_examples = create_train_data(shuffle=False)
   
 def create_temp_file( text):
     temp_file = tempfile.NamedTemporaryFile(delete=False)
@@ -18,31 +18,31 @@ def create_temp_file( text):
 
 # histogram of tokens per batch_size
 # arg1 :- must be a padded_batch dataset
-def hist_tokens_per_batch(split='valid'):
+def hist_tokens_per_batch(train_dataset, val_dataset, split='valid'):
     x=[]
     tf_dataset = train_dataset if split == 'train' else val_dataset
-    for (_, (i, j)) in enumerate(tf_dataset):
+    for (_, (i, j)) in enumerate(tf_dataset.take(20)):
         x.append(tf.size(i) + tf.size(j))
-
     plt.hist(x, bins=20)
     plt.xlabel('Total tokens per batch')
     plt.ylabel('No of times')
-    plt.show()
+    plt.savefig('#_of_tokens per batch in '+split+' set.png')
+    plt.close() 
 
 # histogram of Summary_lengths
 # arg1 :- must be a padded_batch dataset
-def hist_summary_length(split='valid'):
+def hist_summary_length(train_dataset, val_dataset, split='valid'):
     x=[]
     tf_dataset = train_dataset if split == 'train' else val_dataset
-    for (doc, summ) in (tf_dataset.unbatch()):
+    for (doc, summ) in tf_dataset.unbatch().take(2000):
+        # don't count padded zeros as part of summary length
         x.append(len([i for i in summ if i]))
-        #x.append(tf.shape(j)[1])
-
     plt.hist(x, bins=20)
     plt.xlabel('Summary_lengths')
     plt.ylabel('No of times')
-    plt.show()
-    
+    plt.savefig(split+'_Summary_lengths.png')
+    plt.close() 
+
 def beam_search_train(inp_sentences, beam_size):
   
   start = [tokenizer_en.vocab_size] * inp_sentences.shape[0]

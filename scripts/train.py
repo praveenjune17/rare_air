@@ -8,7 +8,7 @@ import os
 import shutil
 import tensorflow_datasets as tfds
 from preprocess import create_train_data
-from transformer import Transformer, Generator, create_masks
+from transformer import Transformer, Pointer_Generator, create_masks
 from hyper_parameters import h_parms
 from configuration import config
 from metrics import optimizer, loss_function, get_loss_and_accuracy, tf_write_summary, monitor_run
@@ -16,9 +16,17 @@ from input_path import file_path
 from creates import log, train_summary_writer, valid_summary_writer
 from create_tokenizer import tokenizer_en
 from local_tf_ops import *
-
+from utility import hist_summary_length, hist_tokens_per_batch
 
 train_dataset, val_dataset, num_of_train_examples = create_train_data()
+
+#create histogram for summary_lengths and token 
+hist_summary_length(train_dataset, val_dataset, 'valid')
+hist_summary_length(train_dataset, val_dataset, 'train')
+hist_tokens_per_batch(train_dataset, val_dataset, 'valid')
+hist_tokens_per_batch(train_dataset, val_dataset, 'train')
+log.info('Histograms created')
+
 train_loss, train_accuracy = get_loss_and_accuracy()
 validation_loss, validation_accuracy = get_loss_and_accuracy()
 
@@ -38,7 +46,7 @@ transformer = Transformer(
                           target_vocab_size=config.target_vocab_size, 
                           rate=h_parms.dropout_rate
                           )
-generator   = Generator()
+pointer_generator   = Pointer_Generator()
 
 @tf.function(input_signature=train_step_signature)
 def train_step(inp, tar, inp_shape, tar_shape, batch):
@@ -59,14 +67,14 @@ def train_step(inp, tar, inp_shape, tar_shape, batch):
                                 "Nan's in the transformer predictions"
                                 )
     if config.copy_gen:
-      predictions = generator(dec_output, predictions, attention_weights, inp, 
+      predictions = pointer_generator(dec_output, predictions, attention_weights, inp, 
                             inp_shape, tar_shape, batch, training=True)
       tf.debugging.check_numerics(
                                 predictions,
-                                "Nan's in the generator predictions"
+                                "Nan's in the pointer_generator predictions"
                                 )
       
-    train_variables = train_variables + generator.trainable_variables
+    train_variables = train_variables + pointer_generator.trainable_variables
     
     loss = loss_function(tar_real, predictions)
   gradients = tape.gradient(loss, train_variables)    
@@ -92,7 +100,7 @@ def val_step(inp, tar, inp_shape, tar_shape, batch):
                                                            dec_padding_mask
                                                            )
   if config.copy_gen:
-    predictions = generator(
+    predictions = pointer_generator(
                             dec_output, 
                             predictions, 
                             attention_weights, 
@@ -124,7 +132,7 @@ def val_step_with_summary(inp, tar, epoch, inp_shape, tar_shape, batch):
                                                            dec_padding_mask
                                                            )
   if config.copy_gen:
-    predictions = generator(
+    predictions = pointer_generator(
                             dec_output, 
                             predictions, 
                             attention_weights, 
@@ -160,7 +168,7 @@ def calc_validation_loss(validation_dataset, epoch):
 def check_ckpt(checkpoint_path):
     ckpt = tf.train.Checkpoint(transformer=transformer,
                            optimizer=optimizer,
-                           generator=generator)
+                           pointer_generator=pointer_generator)
 
     ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=20)
     if tf.train.latest_checkpoint(checkpoint_path):
@@ -189,7 +197,7 @@ for epoch in range(h_parms.epochs):
     if batch==0 and epoch ==0:
       log.info(transformer.summary())
       if config.copy_gen:
-        log.info(generator.summary())
+        log.info(pointer_generator.summary())
       log.info(batch_zero.format(time.time()-start))
     if batch % config.print_chks == 0:
       log.info(batch_run_details.format(

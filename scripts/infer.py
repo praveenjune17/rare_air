@@ -5,7 +5,7 @@ import time
 import os
 import numpy as np
 from create_tokenizer import tokenizer_en
-from transformer import Transformer, Generator, create_masks
+from transformer import Transformer, Pointer_Generator, create_masks
 from hyper_parameters import h_parms
 from configuration import config
 from input_path import file_path
@@ -28,12 +28,12 @@ transformer = Transformer(
                           target_vocab_size=config.target_vocab_size, 
                           rate=h_parms.dropout_rate
                           )
-generator   = Generator()
+pointer_generator   = Pointer_Generator()
 
 def restore_chkpt(checkpoint_path):
     ckpt = tf.train.Checkpoint(
                                transformer=transformer,
-                               generator=generator
+                               pointer_generator=pointer_generator
                                )
     assert tf.train.latest_checkpoint(os.path.split(checkpoint_path)[0]), 'Incorrect checkpoint direcotry'
     ckpt.restore(checkpoint_path).expect_partial()
@@ -60,7 +60,7 @@ def beam_search_eval(document, beam_size):
                                                             )
     
     if config.copy_gen:	
-      predictions = generator(
+      predictions = pointer_generator(
                               dec_output, 
                               predictions, 
                               attention_weights, 	

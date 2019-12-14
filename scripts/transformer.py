@@ -316,19 +316,19 @@ class Transformer(tf.keras.Model):
     return final_output, attention_weights, dec_output
 
 
-class Generator(tf.keras.Model):
+class Pointer_Generator(tf.keras.Model):
   
   def __init__(self):
-    super(Generator, self).__init__()
+    super(Pointer_Generator, self).__init__()
     
-    self.generator_vec = tf.keras.layers.Dense(1, activation='sigmoid')
+    self.pointer_generator_vec = tf.keras.layers.Dense(1, activation='sigmoid')
     
   def call(self, dec_output, final_output, attention_weights, encoder_input, 
            inp_shape, tar_shape, batch, training):
 
     batch = tf.shape(encoder_input)[0]
     # p_gen (batch_size, tar_seq_len, 1)
-    p_gen = self.generator_vec(dec_output)
+    p_gen = self.pointer_generator_vec(dec_output)
     # vocab_dist (batch_size, tar_seq_len, target_vocab_size)   
     vocab_dist_ = tf.math.softmax(final_output, axis=-1)
     vocab_dist = p_gen * vocab_dist_ 

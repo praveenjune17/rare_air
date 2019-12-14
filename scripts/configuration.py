@@ -13,7 +13,7 @@ hyp = {
  'last_recorded_value': None,
  'monitor_metric' : 'combined_metric',
  'monitor_only_after': 5,        # monitor the monitor_metric only after this epoch                                         
- 'max_tokens_per_batch': 11500,
+ 'max_tokens_per_batch': 20000,
  'minimum_train_loss': 0.1,
  'num_examples_to_train': None,   #If None then all the examples in the dataset will be used to train
  'num_examples_to_infer': None,
