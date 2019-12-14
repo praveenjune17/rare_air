@@ -34,17 +34,13 @@ def hist_tokens_per_batch(split=='valid'):
 def hist_summary_length(split=='valid'):
     x=[]
     tf_dataset = train_dataset if split == 'train' else val_dataset
-    for (_, (i, j)) in enumerate(tf_dataset):
+    for (_, (i, j)) in enumerate(tf_dataset.unbatch()):
         x.append(tf.shape(j)[1])
 
     plt.hist(x, bins=20)
     plt.xlabel('Summary_lengths')
     plt.ylabel('No of times')
     plt.show()
-
-#if (tf.size(i) + tf.size(j)) < 20000:
-#    count+=1
-#count/batch >= 0.90    
     
 def beam_search_train(inp_sentences, beam_size):
   
