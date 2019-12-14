@@ -28,17 +28,17 @@ def filter_token_size(x, y):
 def tf_encode(doc, summary):
     return tf.py_function(encode, [doc, summary], [tf.int64, tf.int64])
     
-def map_batch_shuffle(dataset, buffer_size, split, batch_size=h_parms.batch_size):
+def map_batch_shuffle(dataset, buffer_size, split, shuffle=True, batch_size=h_parms.batch_size):
     tf_dataset = dataset.map(tf_encode, num_parallel_calls=AUTOTUNE)
     tf_dataset = tf_dataset.cache()
-    if split == 'train':
+    if split == 'train' and shuffle:
        tf_dataset = tf_dataset.shuffle(buffer_size, seed = 100)
     tf_dataset = tf_dataset.padded_batch(batch_size, padded_shapes=([-1], [-1]))
     tf_dataset = tf_dataset.filter(filter_token_size)
     tf_dataset = tf_dataset.prefetch(buffer_size=AUTOTUNE)
     return tf_dataset
     
-def create_train_data(num_samples_to_train = config.num_examples_to_train):
+def create_train_data(num_samples_to_train = config.num_examples_to_train, shuffle=True):
 
     if config.use_tfds:
         examples, metadata = tfds.load('gigaword', with_info=True, as_supervised=True)
@@ -62,6 +62,7 @@ def create_train_data(num_samples_to_train = config.num_examples_to_train):
                                      train_examples, 
                                      train_buffer_size, 
                                      split = 'train',
+                                     shuffle = shuffle,
                                      batch_size=h_parms.batch_size
                                      )
     valid_dataset = map_batch_shuffle(
@@ -81,7 +82,7 @@ def infer_data_from_df(num_of_infer_examples=config.num_examples_to_infer):
                                       infer_examples, 
                                       infer_buffer_size, 
                                       split = 'infer',
-                                      batch_size=1                                                        #TODO       if > 1 then (ip and op) might be shuffled during beam search 
+                                      batch_size=1             #TODO  if > 1 then (ip and op) might be shuffled during beam search 
                                       )
     log.info('infer tf_dataset created')
     return infer_dataset
