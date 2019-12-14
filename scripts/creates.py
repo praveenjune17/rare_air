@@ -12,7 +12,7 @@ def check_and_create_dir(path):
     if not os.path.exists(path):
       os.makedirs(path)
       print(f'directory {path} created ')
-
+        
 # create folder in input_path if they don't exist
 if not config.use_tfds:
   assert (os.path.exists(file_path['train_csv_path'])), 'Training dataset not available'
@@ -22,7 +22,14 @@ for key in file_path.keys():
   else:
       if os.path.splitext(file_path[key])[1] == '':
         check_and_create_dir(file_path[key])
-      
+          
+# if os.listdir(file_path.summary_write_path):
+#   shutil.rmtree(file_path.summary_write_path)
+#   os.makedirs(file_path.summary_write_path)
+# if os.listdir(file_path.tensorboard_log):
+#   shutil.rmtree(file_path.tensorboard_log)
+#   os.makedirs(file_path.tensorboard_log)
+    
 # get TF logger
 log = logging.getLogger('tensorflow')
 log.setLevel(logging.DEBUG)
