@@ -18,7 +18,7 @@ def create_temp_file( text):
 
 # histogram of tokens per batch_size
 # arg1 :- must be a padded_batch dataset
-def hist_tokens_per_batch(split=='valid'):
+def hist_tokens_per_batch(split='valid'):
     x=[]
     tf_dataset = train_dataset if split == 'train' else val_dataset
     for (_, (i, j)) in enumerate(tf_dataset):
@@ -31,7 +31,7 @@ def hist_tokens_per_batch(split=='valid'):
 
 # histogram of Summary_lengths
 # arg1 :- must be a padded_batch dataset
-def hist_summary_length(split=='valid'):
+def hist_summary_length(split='valid'):
     x=[]
     tf_dataset = train_dataset if split == 'train' else val_dataset
     for (_, (i, j)) in enumerate(tf_dataset.unbatch()):
