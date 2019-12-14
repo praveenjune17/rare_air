@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from preprocess import create_train_data
+from hyper_parameters import h_parms
 
 #train_dataset, val_dataset, num_of_train_examples = create_train_data(shuffle=False)
   
@@ -21,7 +22,8 @@ def create_temp_file( text):
 def hist_tokens_per_batch(train_dataset, val_dataset, split='valid'):
     x=[]
     tf_dataset = train_dataset if split == 'train' else val_dataset
-    for (_, (i, j)) in enumerate(tf_dataset.take(20)):
+    samples = int(np.ceil(2000/h_parms.batch_size))
+    for (_, (i, j)) in enumerate(tf_dataset.take(samples)):
         x.append(tf.size(i) + tf.size(j))
     plt.hist(x, bins=20)
     plt.xlabel('Total tokens per batch')
