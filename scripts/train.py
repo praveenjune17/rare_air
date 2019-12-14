@@ -203,8 +203,10 @@ for epoch in range(h_parms.epochs):
       log.info(batch_run_details.format(
         epoch + 1, batch, train_loss.result(), train_accuracy.result()))
   if epoch == 0:
-    num_of_recs_post_filter = ((batch-1)*h_parms.batch_size)/num_of_train_examples
-    log.info(f'Atleast {num_of_recs_post_filter*100}% of training data is used')
+    num_of_recs_post_filter_atmost = ((batch)*h_parms.batch_size)/num_of_train_examples
+    num_of_recs_post_filter_atleast = ((batch-1)*h_parms.batch_size)/num_of_train_examples
+    log.info(f'Data used for training should be in between {num_of_recs_post_filter_atleast*100} - \
+              {num_of_recs_post_filter_atmost*100}% of training data')
   (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(val_dataset, epoch+1)
   ckpt_save_path = ck_pt_mgr.save()
   ckpt_fold, ckpt_string = os.path.split(ckpt_save_path)
