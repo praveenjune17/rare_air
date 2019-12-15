@@ -9,7 +9,7 @@ hyp = {
  'dff': 512,                      # feed forward network hidden parameters
  'early_stop' : True,
  'init_tolerance':0,
- 'input_vocab_size': 8211,        # total vocab size + start and end token
+ 'input_vocab_size': 8148,        # total vocab size + start and end token
  'last_recorded_value': None,
  'monitor_metric' : 'combined_metric',
  'monitor_only_after': 1,        # monitor the monitor_metric only after this epoch                                         
@@ -23,7 +23,7 @@ hyp = {
  'run_tensorboard': True,
  'show_detokenized_samples' : False,
  'summ_length': 1340,
- 'target_vocab_size': 8211,       # total vocab size + start and end token
+ 'target_vocab_size': 8148,       # total vocab size + start and end token
  'test_size': 0.05,               # used when the input is supplied as a csv file
  'tolerance_threshold': 5,       # counter which does early stopping
  'use_tfds' : True,               # use tfds datasets as input to the model (default :- Gigaword )
