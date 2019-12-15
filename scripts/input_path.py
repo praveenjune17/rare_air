@@ -3,7 +3,7 @@ from bunch import Bunch
 import os
 
 #core_path = '/content/drive/My Drive/Client_demo/'  #G_drive
-core_path = '/content/'  
+core_path = os.getcwd() 
 dataset_name = 'gigaword'
 file_path = {
         'best_ckpt_path' : os.path.join(core_path, "created_files/training_summarization_model_ckpts/"+dataset_name+"/best_checkpoints/"),  

@@ -84,7 +84,8 @@ def tf_write_summary(tar_real, predictions, inp, epoch):
   return tf.py_function(write_summary, [tar_real, predictions, inp, epoch], Tout=[tf.float32, tf.float32])
     
 
-def monitor_run(latest_ckpt, val_loss, val_acc, bert_score, rouge_score, to_monitor=config.monitor_metric):
+def monitor_run(latest_ckpt, ckpt_save_path, val_loss, val_acc, bert_score, rouge_score, to_monitor=config.monitor_metric):
+  ckpt_fold, ckpt_string = os.path.split(ckpt_save_path)
   monitor_metrics = dict()
   monitor_metrics['validation_loss'] = val_loss
   monitor_metrics['validation_accuracy'] = val_acc

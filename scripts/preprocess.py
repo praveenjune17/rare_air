@@ -31,7 +31,7 @@ def tf_encode(doc, summary):
 def map_batch_shuffle(dataset, buffer_size, split, shuffle=True, batch_size=h_parms.batch_size):
     tf_dataset = dataset.map(tf_encode, num_parallel_calls=AUTOTUNE)
     tf_dataset = tf_dataset.cache()
-    if split == 'train' and shuffle:
+    if split == 'train' and shuffle and (not config.use_tfds):
        tf_dataset = tf_dataset.shuffle(buffer_size, seed = 100)
     tf_dataset = tf_dataset.padded_batch(batch_size, padded_shapes=([-1], [-1]))
     tf_dataset = tf_dataset.filter(filter_token_size)
@@ -68,11 +68,11 @@ def create_train_data(num_samples_to_train = config.num_examples_to_train, shuff
     valid_dataset = map_batch_shuffle(
                                      valid_examples, 
                                      valid_buffer_size, 
-                                     split='test',
+                                     split='valid',
                                      batch_size=h_parms.batch_size
                                      )
     log.info('Train and Test tf_datasets created')
-    return train_dataset, valid_dataset, train_buffer_size
+    return (train_dataset, valid_dataset, train_buffer_size, valid_buffer_size)
     
 def infer_data_from_df(num_of_infer_examples=config.num_examples_to_infer):
     doc, summ = create_dataframe(file_path.infer_csv_path, num_of_infer_examples)

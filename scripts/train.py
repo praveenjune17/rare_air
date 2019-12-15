@@ -18,14 +18,16 @@ from create_tokenizer import tokenizer_en
 from local_tf_ops import *
 from utility import hist_summary_length, hist_tokens_per_batch
 
-train_dataset, val_dataset, num_of_train_examples = create_train_data()
+
+
+train_dataset, val_dataset, num_of_train_examples, num_of_valid_examples = create_train_data()
 
 #create histogram for summary_lengths and token 
-hist_summary_length(train_dataset, val_dataset, 'valid')
-hist_summary_length(train_dataset, val_dataset, 'train')
-hist_tokens_per_batch(train_dataset, val_dataset, 'valid')
-hist_tokens_per_batch(train_dataset, val_dataset, 'train')
-log.info('Histograms created')
+#hist_summary_length(train_dataset, val_dataset, 'valid')
+#hist_summary_length(train_dataset, val_dataset, 'train')
+#hist_tokens_per_batch(train_dataset, val_dataset, 'valid')
+#hist_tokens_per_batch(train_dataset, val_dataset, 'train')
+#log.info('Histograms created')
 
 train_loss, train_accuracy = get_loss_and_accuracy()
 validation_loss, validation_accuracy = get_loss_and_accuracy()
@@ -52,9 +54,7 @@ pointer_generator   = Pointer_Generator()
 def train_step(inp, tar, inp_shape, tar_shape, batch):
   tar_inp = tar[:, :-1]
   tar_real = tar[:, 1:]
-  
   enc_padding_mask, combined_mask, dec_padding_mask = create_masks(inp, tar_inp)
-  
   with tf.GradientTape() as tape:
     predictions, attention_weights, dec_output = transformer(inp, tar_inp, 
                                  True, 
@@ -73,13 +73,10 @@ def train_step(inp, tar, inp_shape, tar_shape, batch):
                                 predictions,
                                 "Nan's in the pointer_generator predictions"
                                 )
-      
     train_variables = train_variables + pointer_generator.trainable_variables
-    
     loss = loss_function(tar_real, predictions)
   gradients = tape.gradient(loss, train_variables)    
   optimizer.apply_gradients(zip(gradients, train_variables))
-  
   train_loss(loss)
   train_accuracy(tar_real, predictions)  
 
@@ -89,8 +86,6 @@ def val_step(inp, tar, inp_shape, tar_shape, batch):
   tar_real = tar[:, 1:]
   
   enc_padding_mask, combined_mask, dec_padding_mask = create_masks(inp, tar_inp)
-  
-  
   predictions, attention_weights, dec_output = transformer(
                                                            inp, 
                                                            tar_inp, 
@@ -111,7 +106,6 @@ def val_step(inp, tar, inp_shape, tar_shape, batch):
                             training=False
                             )
   loss = loss_function(tar_real, predictions)
-  
   validation_loss(loss)
   validation_accuracy(tar_real, predictions)
   
@@ -119,10 +113,7 @@ def val_step(inp, tar, inp_shape, tar_shape, batch):
 def val_step_with_summary(inp, tar, epoch, inp_shape, tar_shape, batch):
   tar_inp = tar[:, :-1]
   tar_real = tar[:, 1:]
-  
   enc_padding_mask, combined_mask, dec_padding_mask = create_masks(inp, tar_inp)
-  
-  
   predictions, attention_weights, dec_output = transformer(
                                                            inp, 
                                                            tar_inp, 
@@ -203,13 +194,15 @@ for epoch in range(h_parms.epochs):
       log.info(batch_run_details.format(
         epoch + 1, batch, train_loss.result(), train_accuracy.result()))
   if epoch == 0:
-    num_of_recs_post_filter_atmost = ((batch)*h_parms.batch_size)/num_of_train_examples
-    num_of_recs_post_filter_atleast = ((batch-1)*h_parms.batch_size)/num_of_train_examples
-    log.info(f'Data used for training should be in between {num_of_recs_post_filter_atleast*100} - \
+    if batch > 0:
+      num_of_recs_post_filter_atmost = ((batch)*h_parms.batch_size)/num_of_train_examples
+      num_of_recs_post_filter_atleast = ((batch-1)*h_parms.batch_size)/num_of_train_examples
+      log.info(f'Number of records used for training should be in between {num_of_recs_post_filter_atleast*100} - \
               {num_of_recs_post_filter_atmost*100}% of training data')
+    else:
+      log.info(f'Number of records used for training is {sum(1 for l in train_dataset.unbatch())}')
   (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(val_dataset, epoch+1)
   ckpt_save_path = ck_pt_mgr.save()
-  ckpt_fold, ckpt_string = os.path.split(ckpt_save_path)
   latest_ckpt+=1
   if config.run_tensorboard:
     with train_summary_writer.as_default():
@@ -230,7 +223,5 @@ for epoch in range(h_parms.epochs):
           )
   log.info(epoch_timing.format(epoch + 1, time.time() - start))
   log.info(checkpoint_details.format(epoch+1, ckpt_save_path))
-  if not monitor_run(latest_ckpt, val_loss, val_acc, bert_score, rouge_score):
+  if not monitor_run(latest_ckpt, ckpt_save_path, val_loss, val_acc, bert_score, rouge_score):
     break
-
-  
