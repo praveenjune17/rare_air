@@ -41,11 +41,12 @@ def map_batch_shuffle(dataset, buffer_size, split, shuffle=True, batch_size=h_pa
 def create_train_data(num_samples_to_train = config.num_examples_to_train, shuffle=True):
 
     if config.use_tfds:
-        examples, metadata = tfds.load('gigaword', with_info=True, as_supervised=True)
+        examples, metadata = tfds.load(config.tfds_name, with_info=True, as_supervised=True)
+        other_ds = 'validation' if 'validation' in examples else 'test'
         train_examples = examples['train']
-        valid_examples = examples['test']
+        valid_examples = examples[other_ds]
         train_buffer_size = metadata.splits['train'].num_examples
-        valid_buffer_size = metadata.splits['test'].num_examples
+        valid_buffer_size = metadata.splits[other_ds].num_examples
     else:
         doc, summ = create_dataframe(file_path.train_csv_path, num_samples_to_train)
         X_train, X_test, y_train, y_test = train_test_split(
