@@ -16,28 +16,10 @@ from input_path import file_path
 from creates import log, train_summary_writer, valid_summary_writer
 from create_tokenizer import tokenizer_en
 from local_tf_ops import *
-from utility import hist_summary_length, hist_tokens_per_batch
-
-
 
 train_dataset, val_dataset, num_of_train_examples, num_of_valid_examples = create_train_data()
-
-#create histogram for summary_lengths and token 
-#hist_summary_length(train_dataset, val_dataset, 'valid')
-#hist_summary_length(train_dataset, val_dataset, 'train')
-#hist_tokens_per_batch(train_dataset, val_dataset, 'valid')
-#hist_tokens_per_batch(train_dataset, val_dataset, 'train')
-#log.info('Histograms created')
-
 train_loss, train_accuracy = get_loss_and_accuracy()
 validation_loss, validation_accuracy = get_loss_and_accuracy()
-
-if config.show_detokenized_samples:
-  inp, tar = next(iter(train_dataset))
-  for ip,ta in zip(inp.numpy(), tar.numpy()):
-    log.info(tokenizer_en.decode([i for i in ta if i < tokenizer_en.vocab_size]))
-    log.info(tokenizer_en.decode([i for i in ip if i < tokenizer_en.vocab_size]))
-    break
 
 transformer = Transformer(
                           num_layers=config.num_layers, 
