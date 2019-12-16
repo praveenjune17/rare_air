@@ -10,6 +10,7 @@ import pandas as pd
 from preprocess import create_train_data
 from hyper_parameters import h_parms
 from create_tokenizer import tokenizer_en
+from configuration import config
 
   
 def create_temp_file( text):
@@ -89,12 +90,12 @@ if config.create_hist:
   hist_summary_length(train_dataset, val_dataset, 'train')
   hist_tokens_per_batch(train_dataset, val_dataset, 'valid')
   hist_tokens_per_batch(train_dataset, val_dataset, 'train')
-  log.info('Histograms created')
+  
+  if config.show_detokenized_samples:
+    inp, tar = next(iter(train_dataset))
+    for ip,ta in zip(inp.numpy(), tar.numpy()):
+      print(tokenizer_en.decode([i for i in ta if i < tokenizer_en.vocab_size]))
+      print(tokenizer_en.decode([i for i in ip if i < tokenizer_en.vocab_size]))
+      break
 
 
-if config.show_detokenized_samples:
-  inp, tar = next(iter(train_dataset))
-  for ip,ta in zip(inp.numpy(), tar.numpy()):
-    log.info(tokenizer_en.decode([i for i in ta if i < tokenizer_en.vocab_size]))
-    log.info(tokenizer_en.decode([i for i in ip if i < tokenizer_en.vocab_size]))
-    break
