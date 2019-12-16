@@ -4,7 +4,7 @@ import os
 
 #core_path = '/content/drive/My Drive/Client_demo/'  #G_drive
 core_path = os.getcwd() 
-dataset_name = 'gigaword'
+dataset_name = 'cnn'
 g_drive_vocab_path = '/content/drive/My Drive/Client_demo/input_files/Vocab_files'
 file_path = {
         'best_ckpt_path' : os.path.join(core_path, "created_files/training_summarization_model_ckpts/"+dataset_name+"/best_checkpoints/"),  
