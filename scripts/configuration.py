@@ -10,7 +10,7 @@ hyp = {
  'dff': 512,                      # feed forward network hidden parameters
  'early_stop' : True,
  'init_tolerance':0,
- 'input_vocab_size': 8148,        # total vocab size + start and end token
+ 'input_vocab_size': 8263,        # total vocab size + start and end token
  'last_recorded_value': None,
  'monitor_metric' : 'combined_metric',
  'monitor_only_after': 1,        # monitor the monitor_metric only after this epoch                                         
@@ -25,7 +25,7 @@ hyp = {
  'samples_to_use' : 2000,         # Number of samples to be used for creating histogram
  'show_detokenized_samples' : False,
  'summ_length': 1340,
- 'target_vocab_size': 8148,       # total vocab size + start and end token
+ 'target_vocab_size': 8263,       # total vocab size + start and end token
  'test_size': 0.05,               # used when the input is supplied as a csv file
  'tfds_name' : 'cnn_dailymail',   # tfds dataset to be used
  'tolerance_threshold': 5,        # tolerance counter used for early stopping
