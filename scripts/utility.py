@@ -39,9 +39,10 @@ def hist_tokens_per_batch(tf_dataset, split='valid'):
 
 # histogram of Summary_lengths
 # arg1 :- must be a padded_batch dataset
-def hist_summary_length(tf_dataset, split='valid'):
+def hist_summary_length(train_dataset, val_dataset, split='valid'):
     x=[]
     count=0
+    tf_dataset = train_dataset if split == 'train' else val_dataset
     for (doc, summ) in tf_dataset.unbatch():
         count+=1
         # don't count padded zeros as part of summary length
@@ -79,19 +80,20 @@ def beam_search_train(inp_sentences, beam_size):
     return (predictions[:,-1:,:]) 
   return (beam_search(transformer_query, start, beam_size, summ_length, 
                       target_vocab_size, 0.6, stop_early=True, eos_id=[end]))
+ 
 
-if config.create_hist:
-  train_dataset, val_dataset, num_of_train_examples, num_of_valid_examples = create_train_data(shuffle=False, filter_off=True)
+train_dataset, val_dataset, num_of_train_examples, num_of_valid_examples = create_train_data(shuffle=False, filter_off=True)
+
+if config.create_hist:  
   #create histogram for summary_lengths and token 
-  hist_summary_length(val_dataset, 'valid')
-  hist_summary_length(train_dataset, 'train')
-  hist_tokens_per_batch(val_dataset, 'valid')
-  hist_tokens_per_batch(train_dataset, 'train')
+  hist_summary_length(train_dataset, val_dataset, 'valid')
+  hist_summary_length(train_dataset, val_dataset, 'train')
+  hist_tokens_per_batch(train_dataset, val_dataset, 'valid')
+  hist_tokens_per_batch(train_dataset, val_dataset, 'train')
   
-  if config.show_detokenized_samples:
-    inp, tar = next(iter(train_dataset))
-    for ip,ta in zip(inp.numpy(), tar.numpy()):
-      print(tokenizer_en.decode([i for i in ta if i < tokenizer_en.vocab_size]))
-      print(tokenizer_en.decode([i for i in ip if i < tokenizer_en.vocab_size]))
-      break
-      
+if config.show_detokenized_samples:
+  inp, tar = next(iter(train_dataset))
+  for ip,ta in zip(inp.numpy(), tar.numpy()):
+    print(tokenizer_en.decode([i for i in ta if i < tokenizer_en.vocab_size]))
+    print(tokenizer_en.decode([i for i in ip if i < tokenizer_en.vocab_size]))
+    break
