@@ -35,5 +35,5 @@ else:
     tokenizer_en = tfds.features.text.SubwordTextEncoder.build_from_corpus(
                 (doc for doc, _ in zip(doc, summ)), target_vocab_size=2**13)
   tokenizer_en.save_to_file(file_path.subword_vocab_path)
-log.info('subword vocab file created')
+log.info('subword vocab file loaded')
 assert(tokenizer_en.vocab_size+2 == config.input_vocab_size== config.target_vocab_size), f' *vocab size in configuration script should be {tokenizer_en.vocab_size+2}'
