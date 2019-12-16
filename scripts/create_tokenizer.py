@@ -24,7 +24,7 @@ else:
     pass
   log.info('Vocab file not available so building it from the training set')
   if config.use_tfds:
-    examples, metadata = tfds.load('gigaword', with_info=True, as_supervised=True)
+    examples, metadata = tfds.load(config.tfds_name, with_info=True, as_supervised=True)
     train_examples = examples['train']
     tokenizer_en = tfds.features.text.SubwordTextEncoder.build_from_corpus(
               (doc.numpy() for doc, _ in train_examples), target_vocab_size=2**13)
