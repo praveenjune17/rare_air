@@ -4,6 +4,7 @@ from input_path import file_path
 
 hyp = {
  'copy_gen':True,
+ 'create_hist':False,             # create histogram of summary length and # of tokens per batch
  'doc_length': 8096,
  'd_model': 512,                  # the projected word vector dimension
  'dff': 512,                      # feed forward network hidden parameters
@@ -21,21 +22,21 @@ hyp = {
  'num_layers': 3,                 # number of transformer blocks
  'print_chks': 50,                # print training progress per number of batches specified
  'run_tensorboard': True,
+ 'samples_to_use' : 2000,         # Number of samples to be used for creating histogram
  'show_detokenized_samples' : False,
  'summ_length': 1340,
  'target_vocab_size': 8148,       # total vocab size + start and end token
  'test_size': 0.05,               # used when the input is supplied as a csv file
- 'tfds_name' : 'cnn_dailymail',
- 'tolerance_threshold': 5,       # counter which does early stopping
- 'use_tfds' : True,               # use tfds datasets as input to the model (default :- Gigaword )
- 'verbose': True,
+ 'tfds_name' : 'cnn_dailymail',   # tfds dataset to be used
+ 'tolerance_threshold': 5,        # tolerance counter used for early stopping
+ 'use_tfds' : True,               # use tfds datasets as input to the model 
  'write_per_epoch': 1,            # write summary for every specified epoch
  'write_summary_op': True         # write validation summary to hardisk
  }                                    
 
 config = Bunch(hyp)
 
-#Parse log and get last_recorded_value
+#Parse log and get last_recorded_value of monitor_metric
 try:
   with open(file_path.log_path) as f:
     for line in reversed(f.readlines()):
