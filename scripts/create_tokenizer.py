@@ -16,6 +16,9 @@ def create_dataframe(path, num_examples):
 
 if os.path.exists(file_path.subword_vocab_path+'.subwords'):
   tokenizer_en = tfds.features.text.SubwordTextEncoder.load_from_file(file_path.subword_vocab_path)  
+elif os.path.split(file_path.subword_vocab_path)[1] + '.subwords' in os.listdir(file_path.G_drive_path):
+  new_vocab_path = os.path.join(file_path.G_drive_path, os.path.split(file_path.subword_vocab_path)[1]+'.subwords')
+  tokenizer_en = tfds.features.text.SubwordTextEncoder.load_from_file(new_vocab_path)
 else:
   try:
     os.makedirs(os.path.split(file_path.subword_vocab_path)[0])
