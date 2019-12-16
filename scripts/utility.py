@@ -39,10 +39,9 @@ def hist_tokens_per_batch(tf_dataset, split='valid'):
 
 # histogram of Summary_lengths
 # arg1 :- must be a padded_batch dataset
-def hist_summary_length(train_dataset, val_dataset, split='valid'):
+def hist_summary_length(tf_dataset, split='valid'):
     x=[]
     count=0
-    tf_dataset = train_dataset if split == 'train' else val_dataset
     for (doc, summ) in tf_dataset.unbatch():
         count+=1
         # don't count padded zeros as part of summary length
@@ -86,10 +85,10 @@ train_dataset, val_dataset, num_of_train_examples, num_of_valid_examples = creat
 
 if config.create_hist:  
   #create histogram for summary_lengths and token 
-  hist_summary_length(train_dataset, val_dataset, 'valid')
-  hist_summary_length(train_dataset, val_dataset, 'train')
-  hist_tokens_per_batch(train_dataset, val_dataset, 'valid')
-  hist_tokens_per_batch(train_dataset, val_dataset, 'train')
+  hist_summary_length(val_dataset, 'valid')
+  hist_summary_length(train_dataset, 'train')
+  hist_tokens_per_batch(val_dataset, 'valid')
+  hist_tokens_per_batch(train_dataset, 'train')
   
 if config.show_detokenized_samples:
   inp, tar = next(iter(train_dataset))
