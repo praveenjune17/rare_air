@@ -25,6 +25,7 @@ hyp = {
  'summ_length': 1340,
  'target_vocab_size': 8148,       # total vocab size + start and end token
  'test_size': 0.05,               # used when the input is supplied as a csv file
+ 'tfds_name' : 'cnn_dailymail',
  'tolerance_threshold': 5,       # counter which does early stopping
  'use_tfds' : True,               # use tfds datasets as input to the model (default :- Gigaword )
  'verbose': True,
