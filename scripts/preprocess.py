@@ -35,7 +35,7 @@ def map_batch_shuffle(dataset, buffer_size, split, shuffle=True, batch_size=h_pa
        tf_dataset = tf_dataset.shuffle(buffer_size, seed = 100)
     tf_dataset = tf_dataset.padded_batch(batch_size, padded_shapes=([-1], [-1]))
     tf_dataset = tf_dataset.filter(filter_token_size)
-    tf_dataset = tf_dataset.prefetch(buffer_size=AUTOTUNE)
+    tf_dataset = tf_dataset.prefetch(buffer_size=-1)
     return tf_dataset
     
 def create_train_data(num_samples_to_train = config.num_examples_to_train, shuffle=True):
