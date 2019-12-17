@@ -34,16 +34,29 @@ def filter_token_size(x, y):
 def tf_encode(doc, summary):
     return tf.py_function(encode, [doc, summary], [tf.int64, tf.int64])
     
+# def map_batch_shuffle(dataset, buffer_size, split, 
+#                       shuffle=True, batch_size=h_parms.batch_size,
+#                       filter_off=False):
+#     tf_dataset = dataset.map(tf_encode, num_parallel_calls=AUTOTUNE)
+#     tf_dataset = tf_dataset.cache()
+#     if split == 'train' and shuffle and (not config.use_tfds):
+#        tf_dataset = tf_dataset.shuffle(buffer_size, seed = 100)
+#     tf_dataset = tf_dataset.padded_batch(batch_size, padded_shapes=([-1], [-1]))
+#     if not filter_off:
+#       tf_dataset = tf_dataset.filter(filter_token_size)
+#     tf_dataset = tf_dataset.prefetch(buffer_size=AUTOTUNE)
+#     return tf_dataset
+
 def map_batch_shuffle(dataset, buffer_size, split, 
                       shuffle=True, batch_size=h_parms.batch_size,
                       filter_off=False):
     tf_dataset = dataset.map(tf_encode, num_parallel_calls=AUTOTUNE)
+    if not filter_off:
+        tf_dataset = tf_dataset.filter(filter_len_and_size)
     tf_dataset = tf_dataset.cache()
     if split == 'train' and shuffle and (not config.use_tfds):
        tf_dataset = tf_dataset.shuffle(buffer_size, seed = 100)
     tf_dataset = tf_dataset.padded_batch(batch_size, padded_shapes=([-1], [-1]))
-    if not filter_off:
-      tf_dataset = tf_dataset.filter(filter_len_and_size)
     tf_dataset = tf_dataset.prefetch(buffer_size=AUTOTUNE)
     return tf_dataset
     
