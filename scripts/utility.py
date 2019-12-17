@@ -92,13 +92,13 @@ def beam_search_train(inp_sentences, beam_size):
  
 
 
-if __name__= '__main__':
+if __name__== '__main__':
   examples, metadata = tfds.load(config.tfds_name, with_info=True, as_supervised=True)
   if config.create_hist:   
     splits = examples.keys()
     percentage_of_samples = 0.1
     tf_datasets = {}
-    buffer_size{}
+    buffer_size = {}
     for split in splits:
       tf_datasets[split] = examples[split].map(tf_encode, num_parallel_calls=-1)
       buffer_size[split] = metadata.splits[split].num_examples
