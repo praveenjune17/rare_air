@@ -5,7 +5,7 @@ from input_path import file_path
 hyp = {
  'copy_gen':True,
  'create_hist':False,             # create histogram of summary length and # of tokens per batch
- 'doc_length': 8096,
+ 'doc_length': 1268,
  'd_model': 512,                  # the projected word vector dimension
  'dff': 512,                      # feed forward network hidden parameters
  'early_stop' : True,
@@ -14,17 +14,15 @@ hyp = {
  'last_recorded_value': None,
  'monitor_metric' : 'combined_metric',
  'monitor_only_after': 1,        # monitor the monitor_metric only after this epoch                                         
- 'max_tokens_per_batch': 16000,  
- 'minimum_train_loss': 0.1,
+ 'max_tokens_per_batch': 2000,  
  'num_examples_to_train': None,   #If None then all the examples in the dataset will be used to train
  'num_examples_to_infer': None,
  'num_heads': 8,                  # the number of heads in the multi-headed attention unit
  'num_layers': 3,                 # number of transformer blocks
  'print_chks': 50,                # print training progress per number of batches specified
  'run_tensorboard': True,
- 'samples_to_use' : 2000,         # Number of samples to be used for creating histogram
  'show_detokenized_samples' : False,
- 'summ_length': 1340,
+ 'summ_length': 91,
  'target_vocab_size': 8263,       # total vocab size + start and end token
  'test_size': 0.05,               # used when the input is supplied as a csv file
  'tfds_name' : 'cnn_dailymail',   # tfds dataset to be used
