@@ -22,6 +22,12 @@ def filter_max_length(x, y):
     return tf.logical_and(tf.size(x) <= config.doc_length,
                         tf.size(y) <= config.summ_length)
 
+def filter_len_and_size(x, y):
+    return tf.logical_or(
+                          tf.logical_and(tf.size(x) <= config.doc_length, tf.size(y) <= config.summ_length),
+                          tf.math.less_equal((tf.size(x) + tf.size(y)), (config.doc_length+config.summ_length))
+                        )
+
 def filter_token_size(x, y):
     return tf.math.less_equal((tf.size(x) + tf.size(y)), config.max_tokens_per_batch)
     
@@ -37,7 +43,7 @@ def map_batch_shuffle(dataset, buffer_size, split,
        tf_dataset = tf_dataset.shuffle(buffer_size, seed = 100)
     tf_dataset = tf_dataset.padded_batch(batch_size, padded_shapes=([-1], [-1]))
     if not filter_off:
-      tf_dataset = tf_dataset.filter(filter_token_size)
+      tf_dataset = tf_dataset.filter(filter_len_and_size)
     tf_dataset = tf_dataset.prefetch(buffer_size=AUTOTUNE)
     return tf_dataset
     
