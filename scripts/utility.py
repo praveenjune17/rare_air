@@ -34,7 +34,7 @@ def hist_tokens_per_batch(tf_dataset, num_of_examples, samples_to_try=0.1, split
     for (_, (i, j)) in (enumerate(tf_dataset)):
         x.append(tf.size(i) + tf.size(j))
     print(f'Descriptive statistics on tokens per batch based on {samples_per_batch*h_parms.batch_size} samples is')
-    pd.Series(x).describe()
+    print(pd.Series(x).describe())
     plt.hist(x, bins=20)
     plt.xlabel('Total tokens per batch')
     plt.ylabel('No of times')
@@ -54,7 +54,7 @@ def hist_summary_length(tf_dataset, num_of_examples, samples_to_try=0.1, split='
         summary.append(summ.shape[0])
         document.append(doc.shape[0])
     print(f'Descriptive statistics on Summary length based on {samples} samples is')
-    pd.Series(summary).describe()
+    print(pd.Series(summary).describe())
     print(f'Descriptive statistics on Document length based on {samples} samples is')
     pd.Series(document).describe()
     plt.hist([summary, document], alpha=0.5, bins=20, label=['summary', 'document'] )
