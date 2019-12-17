@@ -32,7 +32,7 @@ def hist_tokens_per_batch(tf_dataset, num_of_examples, samples_to_try=0.1, split
     tf_dataset = tf_dataset.prefetch(buffer_size=samples_per_batch)
     print(f'creating histogram for {samples_per_batch} samples')
     for (_, (i, j)) in (enumerate(tf_dataset)):
-        x.append(tf.size(i) + tf.size(j))
+        x.append((tf.size(i) + tf.size(j)).numpy())
     print(f'Descriptive statistics on tokens per batch based on {samples_per_batch*h_parms.batch_size} samples is')
     print(pd.Series(x).describe())
     if config.create_hist:
