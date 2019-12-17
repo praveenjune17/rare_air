@@ -176,11 +176,14 @@ for epoch in range(h_parms.epochs):
       log.info(batch_run_details.format(
         epoch + 1, batch, train_loss.result(), train_accuracy.result()))
   if epoch == 0:
-    if batch > 0:
-      num_of_recs_post_filter_atmost = ((batch)*h_parms.batch_size)/num_of_train_examples
-      num_of_recs_post_filter_atleast = ((batch-1)*h_parms.batch_size)/num_of_train_examples
-      log.info(f'Number of records used for training should be in between {num_of_recs_post_filter_atleast*100} - \
-              {num_of_recs_post_filter_atmost*100}% of training data')
+    try:
+      if batch > 0:
+        num_of_recs_post_filter_atmost = ((batch)*h_parms.batch_size)/num_of_train_examples
+        num_of_recs_post_filter_atleast = ((batch-1)*h_parms.batch_size)/num_of_train_examples
+        log.info(f'Number of records used for training should be in between {num_of_recs_post_filter_atleast*100} - \
+                {num_of_recs_post_filter_atmost*100}% of training data')
+    except NameError:
+      assert False, 'Training dataset is empty'
     else:
       log.info(f'Number of records used for training is {sum(1 for l in train_dataset.unbatch())}')
   (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(val_dataset, epoch+1)
