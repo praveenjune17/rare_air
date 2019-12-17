@@ -33,9 +33,8 @@ def hist_tokens_per_batch(tf_dataset, num_of_examples, samples_to_try=0.1, split
     print(f'creating histogram for {samples_per_batch} samples')
     for (_, (i, j)) in (enumerate(tf_dataset)):
         x.append(tf.size(i) + tf.size(j))
-    print(f'Recommendeded tokens per batch based on {samples_per_batch*h_parms.batch_size} samples is {tf.math.reduce_mean(x)}')
-    print(f'Min tokens per batch {tf.math.reduce_min(x)}')
-    print(f'Max tokens per batch {tf.math.reduce_max(x)}')
+    print(f'Descriptive statistics on tokens per batch based on {samples_per_batch*h_parms.batch_size} samples is')
+    pd.Series(x).describe()
     plt.hist(x, bins=20)
     plt.xlabel('Total tokens per batch')
     plt.ylabel('No of times')
@@ -54,12 +53,10 @@ def hist_summary_length(tf_dataset, num_of_examples, samples_to_try=0.1, split='
     for (doc, summ) in (tf_dataset):
         summary.append(summ.shape[0])
         document.append(doc.shape[0])
-    print(f'Recommendeded summary length based on {samples} samples is {tf.math.reduce_mean(summary)}')
-    print(f'Recommendeded document length based on {samples} samples is {tf.math.reduce_mean(document)}')
-    print(f'Min summary length {tf.math.reduce_min(summary)}')
-    print(f'Max summary length {tf.math.reduce_max(summary)}')
-    print(f'Min document length {tf.math.reduce_min(document)}')
-    print(f'Max document length {tf.math.reduce_max(document)}')
+    print(f'Descriptive statistics on Summary length based on {samples} samples is')
+    pd.Series(summary).describe()
+    print(f'Descriptive statistics on Document length based on {samples} samples is')
+    pd.Series(document).describe()
     plt.hist([summary, document], alpha=0.5, bins=20, label=['summary', 'document'] )
     plt.xlabel('lengths of document and summary')
     plt.ylabel('Counts')
@@ -95,29 +92,29 @@ def beam_search_train(inp_sentences, beam_size):
  
 
 
-if config.create_hist:  
-  #create histogram for summary_lengths and token 
-  examples, metadata = tfds.load(config.tfds_name, with_info=True, as_supervised=True)
-  val_dataset = examples['validation'].map(tf_encode, num_parallel_calls=2)
-  train_dataset = examples['train'].map(tf_encode, num_parallel_calls=2)
-  test_dataset = examples['test'].map(tf_encode, num_parallel_calls=2)
-  valid_buffer_size = metadata.splits['validation'].num_examples
-  test_buffer_size = metadata.splits['test'].num_examples
-  train_buffer_size = metadata.splits['train'].num_examples
-  datasets = [train_dataset, val_dataset, test_dataset]
-  counts   = [train_buffer_size, valid_buffer_size, test_buffer_size]
-  splits   = ['train', 'valid', 'test']
-  percentage_of_samples = 0.1
-  start = time.time()
-  for dataset,count,split in zip(datasets, counts, split):
-    hist_summary_length(dataset, count, percentage_of_samples, split)  
-    print(f'time taken to calculate length of {split} is {time.time() - start}')
-    hist_tokens_per_batch(dataset, count, percentage_of_samples, split)
-    print(f'time taken to calculate tokens_per_batch of {split} is {time.time() - start}')
-  
-if config.show_detokenized_samples:
-  inp, tar = next(iter(train_dataset))
-  for ip,ta in zip(inp.numpy(), tar.numpy()):
-    print(tokenizer_en.decode([i for i in ta if i < tokenizer_en.vocab_size]))
-    print(tokenizer_en.decode([i for i in ip if i < tokenizer_en.vocab_size]))
-    break
+if __name__= '__main__':
+  if config.create_hist:  
+    #create histogram for summary_lengths and token 
+    examples, metadata = tfds.load(config.tfds_name, with_info=True, as_supervised=True)
+    val_dataset = examples['validation'].map(tf_encode, num_parallel_calls=2)
+    train_dataset = examples['train'].map(tf_encode, num_parallel_calls=2)
+    test_dataset = examples['test'].map(tf_encode, num_parallel_calls=2)
+    valid_buffer_size = metadata.splits['validation'].num_examples
+    test_buffer_size = metadata.splits['test'].num_examples
+    train_buffer_size = metadata.splits['train'].num_examples
+    datasets = [train_dataset, val_dataset, test_dataset]
+    counts   = [train_buffer_size, valid_buffer_size, test_buffer_size]
+    splits   = ['train', 'valid', 'test']
+    percentage_of_samples = 0.1
+    for dataset,count,split in zip(datasets, counts, splits):
+      hist_summary_length(dataset, count, percentage_of_samples, split)  
+      hist_tokens_per_batch(dataset, count, percentage_of_samples, split)
+
+  if config.show_detokenized_samples:
+    inp, tar = next(iter(train_dataset))
+    for ip,ta in zip(inp.numpy(), tar.numpy()):
+      print(tokenizer_en.decode([i for i in ta if i < tokenizer_en.vocab_size]))
+      print(tokenizer_en.decode([i for i in ip if i < tokenizer_en.vocab_size]))
+      break
+    
+    
