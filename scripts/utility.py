@@ -93,25 +93,22 @@ def beam_search_train(inp_sentences, beam_size):
 
 
 if __name__= '__main__':
-  if config.create_hist:  
-    #create histogram for summary_lengths and token 
-    examples, metadata = tfds.load(config.tfds_name, with_info=True, as_supervised=True)
-    val_dataset = examples['validation'].map(tf_encode, num_parallel_calls=2)
-    train_dataset = examples['train'].map(tf_encode, num_parallel_calls=2)
-    test_dataset = examples['test'].map(tf_encode, num_parallel_calls=2)
-    valid_buffer_size = metadata.splits['validation'].num_examples
-    test_buffer_size = metadata.splits['test'].num_examples
-    train_buffer_size = metadata.splits['train'].num_examples
-    datasets = [train_dataset, val_dataset, test_dataset]
-    counts   = [train_buffer_size, valid_buffer_size, test_buffer_size]
-    splits   = ['train', 'valid', 'test']
+  examples, metadata = tfds.load(config.tfds_name, with_info=True, as_supervised=True)
+  if config.create_hist:   
+    splits = examples.keys()
     percentage_of_samples = 0.1
-    for dataset,count,split in zip(datasets, counts, splits):
-      hist_summary_length(dataset, count, percentage_of_samples, split)  
-      hist_tokens_per_batch(dataset, count, percentage_of_samples, split)
+    tf_datasets = {}
+    buffer_size{}
+    for split in splits:
+      tf_datasets[split] = examples[split].map(tf_encode, num_parallel_calls=-1)
+      buffer_size[split] = metadata.splits[split].num_examples
+    for split in tf_datasets:
+      #create histogram for summary_lengths and token
+      hist_summary_length(tf_datasets[split], buffer_size[split], percentage_of_samples, split)  
+      hist_tokens_per_batch(tf_datasets[split], buffer_size[split], percentage_of_samples, split)
 
   if config.show_detokenized_samples:
-    inp, tar = next(iter(train_dataset))
+    inp, tar = next(iter(examples['train']))
     for ip,ta in zip(inp.numpy(), tar.numpy()):
       print(tokenizer_en.decode([i for i in ta if i < tokenizer_en.vocab_size]))
       print(tokenizer_en.decode([i for i in ip if i < tokenizer_en.vocab_size]))
