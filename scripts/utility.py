@@ -35,11 +35,12 @@ def hist_tokens_per_batch(tf_dataset, num_of_examples, samples_to_try=0.1, split
         x.append(tf.size(i) + tf.size(j))
     print(f'Descriptive statistics on tokens per batch based on {samples_per_batch*h_parms.batch_size} samples is')
     print(pd.Series(x).describe())
-    plt.hist(x, bins=20)
-    plt.xlabel('Total tokens per batch')
-    plt.ylabel('No of times')
-    plt.savefig('#_of_tokens per batch in '+split+' set.png')
-    plt.close() 
+    if config.create_hist:
+      plt.hist(x, bins=20)
+      plt.xlabel('Total tokens per batch')
+      plt.ylabel('No of times')
+      plt.savefig('#_of_tokens per batch in '+split+' set.png')
+      plt.close() 
 
 # histogram of Summary_lengths
 # arg1 :- must be a padded_batch dataset
@@ -57,12 +58,13 @@ def hist_summary_length(tf_dataset, num_of_examples, samples_to_try=0.1, split='
     print(pd.Series(summary).describe())
     print(f'Descriptive statistics on Document length based on {samples} samples is')
     pd.Series(document).describe()
-    plt.hist([summary, document], alpha=0.5, bins=20, label=['summary', 'document'] )
-    plt.xlabel('lengths of document and summary')
-    plt.ylabel('Counts')
-    plt.legend(loc='upper right')
-    plt.savefig(split+'_lengths of document and summary.png')
-    plt.close() 
+    if config.create_hist:
+      plt.hist([summary, document], alpha=0.5, bins=20, label=['summary', 'document'] )
+      plt.xlabel('lengths of document and summary')
+      plt.ylabel('Counts')
+      plt.legend(loc='upper right')
+      plt.savefig(split+'_lengths of document and summary.png')
+      plt.close() 
 
 def beam_search_train(inp_sentences, beam_size):
   
@@ -93,19 +95,18 @@ def beam_search_train(inp_sentences, beam_size):
 
 
 if __name__== '__main__':
-  examples, metadata = tfds.load(config.tfds_name, with_info=True, as_supervised=True)
-  if config.create_hist:   
-    splits = examples.keys()
-    percentage_of_samples = 0.1
-    tf_datasets = {}
-    buffer_size = {}
-    for split in splits:
-      tf_datasets[split] = examples[split].map(tf_encode, num_parallel_calls=-1)
-      buffer_size[split] = metadata.splits[split].num_examples
-    for split in tf_datasets:
-      #create histogram for summary_lengths and token
-      hist_summary_length(tf_datasets[split], buffer_size[split], percentage_of_samples, split)  
-      hist_tokens_per_batch(tf_datasets[split], buffer_size[split], percentage_of_samples, split)
+  examples, metadata = tfds.load(config.tfds_name, with_info=True, as_supervised=True)   
+  splits = examples.keys()
+  percentage_of_samples = 0.1
+  tf_datasets = {}
+  buffer_size = {}
+  for split in splits:
+    tf_datasets[split] = examples[split].map(tf_encode, num_parallel_calls=-1)
+    buffer_size[split] = metadata.splits[split].num_examples
+  for split in tf_datasets:
+    #create histogram for summary_lengths and token
+    hist_summary_length(tf_datasets[split], buffer_size[split], percentage_of_samples, split)  
+    hist_tokens_per_batch(tf_datasets[split], buffer_size[split], percentage_of_samples, split)
 
   if config.show_detokenized_samples:
     inp, tar = next(iter(examples['train']))
