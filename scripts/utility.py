@@ -21,7 +21,6 @@ def create_temp_file( text):
       w.write(text)
     return temp_file.name
 
-
 # histogram of tokens per batch_size
 # arg1 :- must be a padded_batch dataset
 def hist_tokens_per_batch(tf_dataset, num_of_examples, samples_to_try=0.1, split='valid'):
@@ -30,12 +29,12 @@ def hist_tokens_per_batch(tf_dataset, num_of_examples, samples_to_try=0.1, split
     tf_dataset = tf_dataset.padded_batch(h_parms.batch_size, padded_shapes=([-1], [-1]))
     tf_dataset = tf_dataset.take(samples_per_batch).cache()
     tf_dataset = tf_dataset.prefetch(buffer_size=samples_per_batch)
-    print(f'creating histogram for {samples_per_batch} samples')
-    for (_, (i, j)) in (enumerate(tf_dataset)):
+    for (i, j) in (tf_dataset):
         x.append((tf.size(i) + tf.size(j)).numpy())
-    print(f'Descriptive statistics on tokens per batch based on {samples_per_batch*h_parms.batch_size} samples is')
+    print(f'Descriptive statistics on tokens per batch for {split}')
     print(pd.Series(x).describe())
     if config.create_hist:
+      print(f'creating histogram for {samples_per_batch*h_parms.batch_size} samples')
       plt.hist(x, bins=20)
       plt.xlabel('Total tokens per batch')
       plt.ylabel('No of times')
@@ -50,15 +49,15 @@ def hist_summary_length(tf_dataset, num_of_examples, samples_to_try=0.1, split='
     samples = int((samples_to_try*(num_of_examples)))
     tf_dataset = tf_dataset.take(samples).cache()
     tf_dataset = tf_dataset.prefetch(buffer_size=samples)
-    print(f'creating histogram for {samples} samples')
     for (doc, summ) in (tf_dataset):
         summary.append(summ.shape[0])
         document.append(doc.shape[0])
-    print(f'Descriptive statistics on Summary length based on {samples} samples is')
+    print(f'Descriptive statistics on Summary length based for {split}')
     print(pd.Series(summary).describe())
-    print(f'Descriptive statistics on Document length based on {samples} samples is')
-    pd.Series(document).describe()
+    print(f'Descriptive statistics on Document length based for {split}')
+    print(pd.Series(document).describe())
     if config.create_hist:
+      print(f'creating histogram for {samples} samples')
       plt.hist([summary, document], alpha=0.5, bins=20, label=['summary', 'document'] )
       plt.xlabel('lengths of document and summary')
       plt.ylabel('Counts')
@@ -92,8 +91,6 @@ def beam_search_train(inp_sentences, beam_size):
   return (beam_search(transformer_query, start, beam_size, summ_length, 
                       target_vocab_size, 0.6, stop_early=True, eos_id=[end]))
  
-
-
 if __name__== '__main__':
   examples, metadata = tfds.load(config.tfds_name, with_info=True, as_supervised=True)   
   splits = examples.keys()
