@@ -3,15 +3,17 @@
 import tempfile
 import tensorflow as tf
 import matplotlib
+import tensorflow_datasets as tfds
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+plt.style.use('seaborn-deep')
 import numpy as np
 import pandas as pd
-from preprocess import create_train_data
+import time
 from hyper_parameters import h_parms
 from create_tokenizer import tokenizer_en
 from configuration import config
-
+from preprocess import tf_encode
   
 def create_temp_file( text):
     temp_file = tempfile.NamedTemporaryFile(delete=False)
@@ -22,15 +24,18 @@ def create_temp_file( text):
 
 # histogram of tokens per batch_size
 # arg1 :- must be a padded_batch dataset
-def hist_tokens_per_batch(tf_dataset, split='valid'):
+def hist_tokens_per_batch(tf_dataset, num_of_examples, samples_to_try=0.1, split='valid'):
     x=[]
-    count=0
-    samples = int(np.ceil(config.samples_to_use/h_parms.batch_size))
-    for (_, (i, j)) in enumerate(tf_dataset):
-        count+=1
+    samples_per_batch = int((samples_to_try*(num_of_examples))//h_parms.batch_size)
+    tf_dataset = tf_dataset.padded_batch(h_parms.batch_size, padded_shapes=([-1], [-1]))
+    tf_dataset = tf_dataset.take(samples_per_batch).cache()
+    tf_dataset = tf_dataset.prefetch(buffer_size=samples_per_batch)
+    print(f'creating histogram for {samples_per_batch} samples')
+    for (_, (i, j)) in (enumerate(tf_dataset)):
         x.append(tf.size(i) + tf.size(j))
-        if count==samples:
-          break
+    print(f'Recommendeded tokens per batch based on {samples_per_batch*h_parms.batch_size} samples is {tf.math.reduce_mean(x)}')
+    print(f'Min tokens per batch {tf.math.reduce_min(x)}')
+    print(f'Max tokens per batch {tf.math.reduce_max(x)}')
     plt.hist(x, bins=20)
     plt.xlabel('Total tokens per batch')
     plt.ylabel('No of times')
@@ -39,19 +44,27 @@ def hist_tokens_per_batch(tf_dataset, split='valid'):
 
 # histogram of Summary_lengths
 # arg1 :- must be a padded_batch dataset
-def hist_summary_length(tf_dataset, split='valid'):
-    x=[]
-    count=0
-    for (doc, summ) in tf_dataset.unbatch():
-        count+=1
-        # don't count padded zeros as part of summary length
-        x.append(len([i for i in summ if i]))
-        if count==config.samples_to_use:
-          break
-    plt.hist(x, bins=20)
-    plt.xlabel('Summary_lengths')
-    plt.ylabel('No of times')
-    plt.savefig(split+'_Summary_lengths.png')
+def hist_summary_length(tf_dataset, num_of_examples, samples_to_try=0.1, split='valid'):
+    summary=[]
+    document=[]
+    samples = int((samples_to_try*(num_of_examples)))
+    tf_dataset = tf_dataset.take(samples).cache()
+    tf_dataset = tf_dataset.prefetch(buffer_size=samples)
+    print(f'creating histogram for {samples} samples')
+    for (doc, summ) in (tf_dataset):
+        summary.append(summ.shape[0])
+        document.append(doc.shape[0])
+    print(f'Recommendeded summary length based on {samples} samples is {tf.math.reduce_mean(summary)}')
+    print(f'Recommendeded document length based on {samples} samples is {tf.math.reduce_mean(document)}')
+    print(f'Min summary length {tf.math.reduce_min(summary)}')
+    print(f'Max summary length {tf.math.reduce_max(summary)}')
+    print(f'Min document length {tf.math.reduce_min(document)}')
+    print(f'Max document length {tf.math.reduce_max(document)}')
+    plt.hist([summary, document], alpha=0.5, bins=20, label=['summary', 'document'] )
+    plt.xlabel('lengths of document and summary')
+    plt.ylabel('Counts')
+    plt.legend(loc='upper right')
+    plt.savefig(split+'_lengths of document and summary.png')
     plt.close() 
 
 def beam_search_train(inp_sentences, beam_size):
@@ -81,14 +94,26 @@ def beam_search_train(inp_sentences, beam_size):
                       target_vocab_size, 0.6, stop_early=True, eos_id=[end]))
  
 
-train_dataset, val_dataset, num_of_train_examples, num_of_valid_examples = create_train_data(shuffle=False, filter_off=True)
 
 if config.create_hist:  
   #create histogram for summary_lengths and token 
-  hist_summary_length(val_dataset, 'valid')
-  hist_summary_length(train_dataset, 'train')
-  hist_tokens_per_batch(val_dataset, 'valid')
-  hist_tokens_per_batch(train_dataset, 'train')
+  examples, metadata = tfds.load(config.tfds_name, with_info=True, as_supervised=True)
+  val_dataset = examples['validation'].map(tf_encode, num_parallel_calls=2)
+  train_dataset = examples['train'].map(tf_encode, num_parallel_calls=2)
+  test_dataset = examples['test'].map(tf_encode, num_parallel_calls=2)
+  valid_buffer_size = metadata.splits['validation'].num_examples
+  test_buffer_size = metadata.splits['test'].num_examples
+  train_buffer_size = metadata.splits['train'].num_examples
+  datasets = [train_dataset, val_dataset, test_dataset]
+  counts   = [train_buffer_size, valid_buffer_size, test_buffer_size]
+  splits   = ['train', 'valid', 'test']
+  percentage_of_samples = 0.1
+  start = time.time()
+  for dataset,count,split in zip(datasets, counts, split):
+    hist_summary_length(dataset, count, percentage_of_samples, split)  
+    print(f'time taken to calculate length of {split} is {time.time() - start}')
+    hist_tokens_per_batch(dataset, count, percentage_of_samples, split)
+    print(f'time taken to calculate tokens_per_batch of {split} is {time.time() - start}')
   
 if config.show_detokenized_samples:
   inp, tar = next(iter(train_dataset))
