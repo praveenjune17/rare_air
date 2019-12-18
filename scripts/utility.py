@@ -59,6 +59,7 @@ def hist_summary_length(tf_dataset, num_of_examples, samples_to_try=0.1, split='
     print(pd.Series(document).describe())
     print(f'Descriptive statistics for the combined length of docs and summs based for {split}')
     print(pd.Series(combined).describe())
+    print(pd.Series(combined).quantile([0.8, 0.9, 0.95]))
     if config.create_hist:
       print(f'creating histogram for {samples} samples')
       plt.hist([summary, document, combined], alpha=0.5, bins=20, label=['summary', 'document', 'combined] )
