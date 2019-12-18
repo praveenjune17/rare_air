@@ -1,4 +1,7 @@
 import tensorflow as tf
+import time
+from configuration import config
+from creates import log
 
 train_step_signature = [
                       tf.TensorSpec(shape=(None, None), dtype=tf.int64),
