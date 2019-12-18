@@ -13,8 +13,7 @@ hyp = {
  'input_vocab_size': 8263,        # total vocab size + start and end token
  'last_recorded_value': None,
  'monitor_metric' : 'combined_metric',
- 'monitor_only_after': 1,        # monitor the monitor_metric only after this epoch                                         
- 'max_tokens_per_batch': 2000,  
+ 'monitor_only_after': 1,        # monitor the monitor_metric only after this epoch                                           
  'max_tokens_per_line' : 1763,   # 90 percentile  
  'num_examples_to_train': None,   #If None then all the examples in the dataset will be used to train
  'num_examples_to_infer': None,
