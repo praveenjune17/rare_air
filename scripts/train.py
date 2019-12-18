@@ -189,17 +189,6 @@ for epoch in range(h_parms.epochs):
   (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(val_dataset, epoch+1)
   ckpt_save_path = ck_pt_mgr.save()
   latest_ckpt+=1
-  if config.run_tensorboard:
-    with train_summary_writer.as_default():
-      tf.summary.scalar('train_loss', train_loss.result(), step=epoch)
-      tf.summary.scalar('train_accuracy', train_accuracy.result(), step=epoch)
-    with valid_summary_writer.as_default():
-      tf.summary.scalar('validation_loss', validation_loss.result(), step=epoch)
-      tf.summary.scalar('validation_accuracy', validation_accuracy.result(), step=epoch)
-      tf.summary.scalar('validation_total_loss', val_acc, step=epoch)
-      tf.summary.scalar('validation_total_accuracy', val_loss, step=epoch)
-      tf.summary.scalar('ROUGE_f1', rouge_score, step=epoch)
-      tf.summary.scalar('BERT_f1', bert_score, step=epoch)
   log.info(
            model_metrics.format(epoch+1, train_loss.result(), 
            train_accuracy.result(),
@@ -208,5 +197,5 @@ for epoch in range(h_parms.epochs):
           )
   log.info(epoch_timing.format(epoch + 1, time.time() - start))
   log.info(checkpoint_details.format(epoch+1, ckpt_save_path))
-  if not monitor_run(latest_ckpt, ckpt_save_path, val_loss, val_acc, bert_score, rouge_score):
+  if not monitor_run(latest_ckpt, ckpt_save_path, val_loss, val_acc, bert_score, rouge_score, valid_summary_writer, epoch):
     break
