@@ -53,16 +53,15 @@ def hist_summary_length(tf_dataset, num_of_examples, samples_to_try=0.1, split='
         summary.append(summ.shape[0])
         document.append(doc.shape[0])
     combined = [i+j for i,j in zip(summary, document)]
-    print(f'Descriptive statistics on Summary length based for {split}')
-    print(pd.Series(summary).describe())
-    print(f'Descriptive statistics on Document length based for {split}')
-    print(pd.Series(document).describe())
-    print(f'Descriptive statistics for the combined length of docs and summs based for {split}')
-    print(pd.Series(combined).describe())
-    print(pd.Series(combined).quantile([0.8, 0.9, 0.95]))
+    print(f'Descriptive statistics on Summary length based for {split} set')
+    print(pd.Series(summary).describe(percentiles=[0.25, 0.5, 0.8, 0.9, 0.95, 0.97] ))
+    print(f'Descriptive statistics on Document length based for {split} set')
+    print(pd.Series(document).describe(percentiles=[0.25, 0.5, 0.8, 0.9, 0.95, 0.97] ))
+    print(f'Descriptive statistics for the combined length of docs and summs based for {split} set')
+    print(pd.Series(combined).describe(percentiles=[0.25, 0.5, 0.8, 0.9, 0.95, 0.97] ))
     if config.create_hist:
       print(f'creating histogram for {samples} samples')
-      plt.hist([summary, document, combined], alpha=0.5, bins=20, label=['summary', 'document', 'combined] )
+      plt.hist([summary, document, combined], alpha=0.5, bins=20, label=['summary', 'document', 'combined'])
       plt.xlabel('lengths of document and summary')
       plt.ylabel('Counts')
       plt.legend(loc='upper right')
@@ -115,5 +114,4 @@ if __name__== '__main__':
       print(tokenizer_en.decode([i for i in ta if i < tokenizer_en.vocab_size]))
       print(tokenizer_en.decode([i for i in ip if i < tokenizer_en.vocab_size]))
       break
-    
     
