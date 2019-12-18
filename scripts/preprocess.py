@@ -29,7 +29,7 @@ def filter_max_length(x, y):
 def filter_combined_length(x, y):
     return tf.math.less_equal(
                               (tf.size(x) + tf.size(y)), 
-                              (config.doc_length + config.summ_length)
+                              config.max_tokens_per_line
                              )
                         
 # this function should be added after padded batch step
