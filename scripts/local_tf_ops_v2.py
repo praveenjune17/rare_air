@@ -35,7 +35,7 @@ batch_run_details = 'Epoch {} Batch {} Train_Loss {:.4f} Train_Accuracy {:.4f}'
 
 
 # run every batch
-def batch_run_check(batch, epoch, train_summary_writer, train_loss, train_accuracy, transformer):
+def batch_run_check(batch, epoch, start, train_summary_writer, train_loss, train_accuracy, transformer):
   if config.run_tensorboard:
     with train_summary_writer.as_default():
       tf.summary.scalar('train_loss', train_loss.result(), step=batch)
