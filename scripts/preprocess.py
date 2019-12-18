@@ -10,8 +10,6 @@ from creates import log
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
-assert((config.max_tokens_per_batch % h_parms.batch_size) == 0) , "max_tokens_per_batch be a multiple of batch size"
-
 def encode(doc, summary):
     lang1 = [tokenizer_en.vocab_size] + tokenizer_en.encode(
     doc.numpy()) + [tokenizer_en.vocab_size+1]
@@ -36,7 +34,7 @@ def filter_combined_length(x, y):
 def filter_batch_token_size(x, y):
     return tf.math.less_equal(
                               (tf.size(x) + tf.size(y)), 
-                              config.max_tokens_per_batch            
+                              config.max_tokens_per_line*h_parms.batch_size
                              )
     
 def tf_encode(doc, summary):
