@@ -84,8 +84,23 @@ def tf_write_summary(tar_real, predictions, inp, epoch):
   return tf.py_function(write_summary, [tar_real, predictions, inp, epoch], Tout=[tf.float32, tf.float32])
     
 
-def monitor_run(latest_ckpt, ckpt_save_path, val_loss, val_acc, bert_score, rouge_score, to_monitor=config.monitor_metric):
+def monitor_run(latest_ckpt, 
+                ckpt_save_path, 
+                val_loss, 
+                val_acc,
+                bert_score, 
+                rouge_score, 
+                valid_summary_writer,
+                epoch,
+                to_monitor=config.monitor_metric):
+  
   ckpt_fold, ckpt_string = os.path.split(ckpt_save_path)
+  if config.run_tensorboard:
+    with valid_summary_writer.as_default():
+      tf.summary.scalar('validation_total_loss', val_acc, step=epoch)
+      tf.summary.scalar('validation_total_accuracy', val_loss, step=epoch)
+      tf.summary.scalar('ROUGE_f1', rouge_score, step=epoch)
+      tf.summary.scalar('BERT_f1', bert_score, step=epoch)
   monitor_metrics = dict()
   monitor_metrics['validation_loss'] = val_loss
   monitor_metrics['validation_accuracy'] = val_acc
@@ -126,8 +141,8 @@ def monitor_run(latest_ckpt, ckpt_save_path, val_loss, val_acc, bert_score, roug
     return False
   else:
     return True
-lr = h_parms.learning_rate if h_parms.learning_rate else CustomSchedule(config.d_model)
-    
+
+lr = h_parms.learning_rate if h_parms.learning_rate else CustomSchedule(config.d_model)    
 if h_parms.grad_clipnorm:
   optimizer = tf.keras.optimizers.Adam(
                                        learning_rate=lr, 
