@@ -10,6 +10,8 @@ from creates import log
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
+assert((config.max_tokens_per_batch % h_parms.batch_size) == 0) , "max_tokens_per_batch be a multiple of batch size"
+
 def encode(doc, summary):
     lang1 = [tokenizer_en.vocab_size] + tokenizer_en.encode(
     doc.numpy()) + [tokenizer_en.vocab_size+1]
@@ -19,17 +21,23 @@ def encode(doc, summary):
 
 # Set threshold for document and  summary length
 def filter_max_length(x, y):
-    return tf.logical_and(tf.size(x) <= config.doc_length,
-                        tf.size(y) <= config.summ_length)
+    return tf.logical_and(
+                          tf.size(x) <= config.doc_length,
+                          tf.size(y) <= config.summ_length
+                         )
 
-def filter_len_and_size(x, y):
-    return tf.logical_or(
-                          tf.logical_and(tf.size(x) <= config.doc_length, tf.size(y) <= config.summ_length),
-                          tf.math.less_equal((tf.size(x) + tf.size(y)), (config.doc_length+config.summ_length))
-                        )
-
-def filter_token_size(x, y):
-    return tf.math.less_equal((tf.size(x) + tf.size(y)), config.max_tokens_per_batch)
+def filter_combined_length(x, y):
+    return tf.math.less_equal(
+                              (tf.size(x) + tf.size(y)), 
+                              (config.doc_length + config.summ_length)
+                             )
+                        
+# this function should be added after padded batch step
+def filter_batch_token_size(x, y):
+    return tf.math.less_equal(
+                              (tf.size(x) + tf.size(y)), 
+                              config.max_tokens_per_batch            
+                             )
     
 def tf_encode(doc, summary):
     return tf.py_function(encode, [doc, summary], [tf.int64, tf.int64])
@@ -52,7 +60,7 @@ def map_batch_shuffle(dataset, buffer_size, split,
                       filter_off=False):
     tf_dataset = dataset.map(tf_encode, num_parallel_calls=AUTOTUNE)
     if not filter_off:
-        tf_dataset = tf_dataset.filter(filter_len_and_size)
+        tf_dataset = tf_dataset.filter(filter_combined_length)
     tf_dataset = tf_dataset.cache()
     if split == 'train' and shuffle and (not config.use_tfds):
        tf_dataset = tf_dataset.shuffle(buffer_size, seed = 100)
