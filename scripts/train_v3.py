@@ -121,7 +121,7 @@ for epoch in range(h_parms.epochs):
   # the target is shifted right during training hence its shape is subtracted by 1
   # not able to do this inside tf.function since it doesn't allow this operation
     train_step(inp, tar, inp.shape[1], tar.shape[1]-1, inp.shape[0])        
-    batch_run_check(batch, epoch, train_summary_writer, train_loss, train_accuracy, transformer)
+    batch_run_check(batch, epoch, start, train_summary_writer, train_loss, train_accuracy, transformer)
   count_recs(batch, epoch, num_of_train_examples)
   (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(val_dataset, 
                                                                       epoch+1, 
