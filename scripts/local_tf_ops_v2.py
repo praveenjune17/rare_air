@@ -1,16 +1,14 @@
 import tensorflow as tf
 
-train_step_signature = 
-                    [
+train_step_signature = [
                       tf.TensorSpec(shape=(None, None), dtype=tf.int64),
                       tf.TensorSpec(shape=(None, None), dtype=tf.int64),
                       tf.TensorSpec(shape=(None), dtype=tf.int32),
                       tf.TensorSpec(shape=(None), dtype=tf.int32),
                       tf.TensorSpec(shape=(None), dtype=tf.int32)
-                    ]
+                      ]
 
-val_step_signature = 
-                   [
+val_step_signature = [
                       tf.TensorSpec(shape=(None, None), dtype=tf.int64),
                       tf.TensorSpec(shape=(None, None), dtype=tf.int64),
                       tf.TensorSpec(shape=(None), dtype=tf.int32),
@@ -18,7 +16,7 @@ val_step_signature =
                       tf.TensorSpec(shape=(None), dtype=tf.int32),
                       tf.TensorSpec(shape=(None), dtype=tf.int32),
                       tf.TensorSpec(shape=(None), dtype=tf.bool)
-                    ]
+                     ]
   
 model_metrics = 'Epoch {}\n,\
                  Train Loss {:.4f}\n,\
@@ -43,8 +41,7 @@ def batch_run_check(batch, epoch, train_summary_writer, train_loss, train_accura
     log.info(transformer.summary())
     log.info(batch_zero.format(time.time()-start))
   if batch % config.print_chks == 0:
-    log.info
-            (
+    log.info(
              batch_run_details.format(
                                      epoch + 1, batch, 
                                      train_loss.result(), 
