@@ -52,17 +52,20 @@ def hist_summary_length(tf_dataset, num_of_examples, samples_to_try=0.1, split='
     for (doc, summ) in (tf_dataset):
         summary.append(summ.shape[0])
         document.append(doc.shape[0])
+    combined = [i+j for i,j in zip(summary, document)]
     print(f'Descriptive statistics on Summary length based for {split}')
     print(pd.Series(summary).describe())
     print(f'Descriptive statistics on Document length based for {split}')
     print(pd.Series(document).describe())
+    print(f'Descriptive statistics for the combined length of docs and summs based for {split}')
+    print(pd.Series(combined).describe())
     if config.create_hist:
       print(f'creating histogram for {samples} samples')
-      plt.hist([summary, document], alpha=0.5, bins=20, label=['summary', 'document'] )
+      plt.hist([summary, document, combined], alpha=0.5, bins=20, label=['summary', 'document', 'combined] )
       plt.xlabel('lengths of document and summary')
       plt.ylabel('Counts')
       plt.legend(loc='upper right')
-      plt.savefig(split+'_lengths of document and summary.png')
+      plt.savefig(split+'_lengths of document, summary and combined.png')
       plt.close() 
 
 def beam_search_train(inp_sentences, beam_size):
@@ -103,7 +106,7 @@ if __name__== '__main__':
   for split in tf_datasets:
     #create histogram for summary_lengths and token
     hist_summary_length(tf_datasets[split], buffer_size[split], percentage_of_samples, split)  
-    hist_tokens_per_batch(tf_datasets[split], buffer_size[split], percentage_of_samples, split)
+    #hist_tokens_per_batch(tf_datasets[split], buffer_size[split], percentage_of_samples, split)
 
   if config.show_detokenized_samples:
     inp, tar = next(iter(examples['train']))
