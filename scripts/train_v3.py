@@ -92,8 +92,11 @@ def val_step(inp, tar, epoch, inp_shape, tar_shape, batch, create_summ):
   loss = loss_function(tar_real, predictions)
   validation_loss(loss)
   validation_accuracy(tar_real, predictions)
-  if create_summ:
-    return tf_write_summary(tar_real, predictions, inp[:, 1:], epoch)
+  if create_summ:	
+    rouge, bert = tf_write_summary(tar_real, predictions, inp[:, 1:], epoch)	
+  else:	
+    rouge, bert = (1.0, 1.0)	
+  return (rouge, bert)
   
 def check_ckpt(checkpoint_path):
     ckpt = tf.train.Checkpoint(
