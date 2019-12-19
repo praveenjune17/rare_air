@@ -35,18 +35,21 @@ batch_run_details = 'Epoch {} Batch {} Train_Loss {:.4f} Train_Accuracy {:.4f}'
 
 
 # run every batch
-def batch_run_check(batch, epoch, start, train_summary_writer, train_loss, train_accuracy, transformer):
+def batch_run_check(batch, epoch, start, train_summary_writer, train_loss, train_accuracy, transformer, pointer_generator):
   if config.run_tensorboard:
     with train_summary_writer.as_default():
       tf.summary.scalar('train_loss', train_loss.result(), step=batch)
       tf.summary.scalar('train_accuracy', train_accuracy.result(), step=batch)
   if batch==0 and epoch ==0:
     log.info(transformer.summary())
+    if config.copy_gen:
+      log.info(pointer_generator.summary())
     log.info(batch_zero.format(time.time()-start))
   if batch % config.print_chks == 0:
     log.info(
              batch_run_details.format(
-                                     epoch + 1, batch, 
+                                     epoch + 1, 
+                                     batch, 
                                      train_loss.result(), 
                                      train_accuracy.result()
                                      )
@@ -58,13 +61,9 @@ def count_recs(batch, epoch, num_of_train_examples):
     try:
       if batch > 0:
         num_of_recs_post_filter_atmost = ((batch)*h_parms.batch_size)/num_of_train_examples
-        num_of_recs_post_filter_atleast = ((batch-1)*h_parms.batch_size)/num_of_train_examples
-        log.info(f'Percentage of records used for training should be in between {num_of_recs_post_filter_atleast*100 :.2f} - \
-                {num_of_recs_post_filter_atmost*100 :.2f}% of training data')
-      else:
-        log.info(f'Number of records used for training is less than {h_parms.batch_size}')
+        log.info(f'Percentage of records used for training should be close to {num_of_recs_post_filter_atmost*100 :.2f}')
     except NameError:
-      assert False, 'Training dataset is empty'
+      log.info('Training dataset has records less than the batch size')
 
 def calc_validation_loss(validation_dataset, 
                          epoch, 
@@ -79,7 +78,7 @@ def calc_validation_loss(validation_dataset,
     if batch == 0:
       rouge_score, bert_score = val_step(inp, tar, epoch, inp.shape[1], tar.shape[1]-1, inp.shape[0], True)
     else:
-      val_step(inp, tar, epoch, inp.shape[1], tar.shape[1]-1, inp.shape[0], False)
+      _ = val_step(inp, tar, epoch, inp.shape[1], tar.shape[1]-1, inp.shape[0], False)
     if config.run_tensorboard:
       with valid_summary_writer.as_default():
         tf.summary.scalar('validation_loss', validation_loss.result(), step=batch)
