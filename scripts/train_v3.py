@@ -132,8 +132,8 @@ for epoch in range(h_parms.epochs):
                     epoch, 
                     start, 
                     train_summary_writer, 
-                    train_loss, 
-                    train_accuracy, 
+                    train_loss.result(), 
+                    train_accuracy.result(), 
                     transformer,
                     pointer_generator
                     )
