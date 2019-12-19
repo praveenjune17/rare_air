@@ -134,7 +134,8 @@ for epoch in range(h_parms.epochs):
                     train_summary_writer, 
                     train_loss, 
                     train_accuracy, 
-                    transformer
+                    transformer,
+                    pointer_generator
                     )
   count_recs(batch, epoch, num_of_train_examples)
   (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(
