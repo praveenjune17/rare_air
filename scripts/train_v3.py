@@ -38,11 +38,14 @@ def train_step(inp, tar, inp_shape, tar_shape, batch):
   tar_real = tar[:, 1:]
   enc_padding_mask, combined_mask, dec_padding_mask = create_masks(inp, tar_inp)
   with tf.GradientTape() as tape:
-    predictions, attention_weights, dec_output = transformer(inp, tar_inp, 
-                                 True, 
-                                 enc_padding_mask, 
-                                 combined_mask, 
-                                 dec_padding_mask)
+    predictions, attention_weights, dec_output = transformer(
+                                                             inp, 
+                                                             tar_inp, 
+                                                             True, 
+                                                             enc_padding_mask, 
+                                                             combined_mask, 
+                                                             dec_padding_mask
+                                                             )
     train_variables = transformer.trainable_variables
     tf.debugging.check_numerics(
                                 predictions,
@@ -77,15 +80,15 @@ def val_step(inp, tar, epoch, inp_shape, tar_shape, batch, create_summ):
                                                            )
   if config.copy_gen:
     predictions = pointer_generator(
-                            dec_output, 
-                            predictions, 
-                            attention_weights, 
-                            inp, 
-                            inp_shape, 
-                            tar_shape, 
-                            batch, 
-                            training=False
-                            )
+                                    dec_output, 
+                                    predictions, 
+                                    attention_weights, 
+                                    inp, 
+                                    inp_shape, 
+                                    tar_shape, 
+                                    batch, 
+                                    training=False
+                                    )
   loss = loss_function(tar_real, predictions)
   validation_loss(loss)
   validation_accuracy(tar_real, predictions)
@@ -93,10 +96,11 @@ def val_step(inp, tar, epoch, inp_shape, tar_shape, batch, create_summ):
     return tf_write_summary(tar_real, predictions, inp[:, 1:], epoch)
   
 def check_ckpt(checkpoint_path):
-    ckpt = tf.train.Checkpoint(transformer=transformer,
-                           optimizer=optimizer,
-                           pointer_generator=pointer_generator)
-
+    ckpt = tf.train.Checkpoint(
+                               transformer=transformer,
+                               optimizer=optimizer,
+                               pointer_generator=pointer_generator
+                              )
     ckpt_manager = tf.train.CheckpointManager(ckpt, checkpoint_path, max_to_keep=20)
     if tf.train.latest_checkpoint(checkpoint_path):
       ckpt.restore(ckpt_manager.latest_checkpoint)
@@ -109,7 +113,6 @@ def check_ckpt(checkpoint_path):
 
 # if a checkpoint exists, restore the latest checkpoint.
 ck_pt_mgr, latest_ckpt = check_ckpt(file_path.checkpoint_path)
-
 for epoch in range(h_parms.epochs):
   start = time.time()  
   train_loss.reset_states()
@@ -121,26 +124,46 @@ for epoch in range(h_parms.epochs):
   # the target is shifted right during training hence its shape is subtracted by 1
   # not able to do this inside tf.function since it doesn't allow this operation
     train_step(inp, tar, inp.shape[1], tar.shape[1]-1, inp.shape[0])        
-    batch_run_check(batch, epoch, start, train_summary_writer, train_loss, train_accuracy, transformer)
+    batch_run_check(
+                    batch, 
+                    epoch, 
+                    start, 
+                    train_summary_writer, 
+                    train_loss, 
+                    train_accuracy, 
+                    transformer
+                    )
   count_recs(batch, epoch, num_of_train_examples)
-  (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(val_dataset, 
+  (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(
+                                                                      val_dataset, 
                                                                       epoch+1, 
                                                                       val_step, 
                                                                       valid_summary_writer, 
                                                                       validation_loss, 
-                                                                      validation_accuracy)
+                                                                      validation_accuracy
+                                                                      )
   ckpt_save_path = ck_pt_mgr.save()
-  latest_ckpt+=1
+  latest_ckpt+=epoch
   log.info(
-           model_metrics.format(epoch+1, 
+           model_metrics.format(
+                                epoch+1, 
                                 train_loss.result(), 
                                 train_accuracy.result(),
                                 val_loss, 
                                 val_acc,
                                 rouge_score, 
-                                bert_score)
+                                bert_score
+                               )
           )
   log.info(epoch_timing.format(epoch + 1, time.time() - start))
   log.info(checkpoint_details.format(epoch+1, ckpt_save_path))
-  if not monitor_run(latest_ckpt, ckpt_save_path, val_loss, val_acc, bert_score, rouge_score, valid_summary_writer, epoch):
+  if not monitor_run(
+                     latest_ckpt, 
+                     ckpt_save_path, 
+                     val_loss, 
+                     val_acc, 
+                     bert_score, 
+                     rouge_score, 
+                     valid_summary_writer, 
+                     epoch):
     break
