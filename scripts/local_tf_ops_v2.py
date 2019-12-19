@@ -38,8 +38,8 @@ batch_run_details = 'Epoch {} Batch {} Train_Loss {:.4f} Train_Accuracy {:.4f}'
 def batch_run_check(batch, epoch, start, train_summary_writer, train_loss, train_accuracy, transformer, pointer_generator):
   if config.run_tensorboard:
     with train_summary_writer.as_default():
-      tf.summary.scalar('train_loss', train_loss.result(), step=batch)
-      tf.summary.scalar('train_accuracy', train_accuracy.result(), step=batch)
+      tf.summary.scalar('train_loss', train_loss, step=batch)
+      tf.summary.scalar('train_accuracy', train_accuracy, step=batch)
   if batch==0 and epoch ==0:
     log.info(transformer.summary())
     if config.copy_gen:
@@ -50,8 +50,8 @@ def batch_run_check(batch, epoch, start, train_summary_writer, train_loss, train
              batch_run_details.format(
                                      epoch + 1, 
                                      batch, 
-                                     train_loss.result(), 
-                                     train_accuracy.result()
+                                     train_loss, 
+                                     train_accuracy
                                      )
             )
 
