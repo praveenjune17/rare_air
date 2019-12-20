@@ -63,7 +63,7 @@ def count_recs(batch, epoch, num_of_train_examples):
         num_of_recs_post_filter_atmost = ((batch)*h_parms.batch_size)/num_of_train_examples
         log.info(f'Percentage of records used for training should be close to {num_of_recs_post_filter_atmost*100 :.2f}')
     except NameError:
-      log.info('Training dataset has records less than the batch size')
+      log.info('End of batch')
 
 def calc_validation_loss(validation_dataset, 
                          epoch, 
