@@ -1,8 +1,8 @@
 # rare_air
-seq2seq  train and infer skeleton for Text summarisation and machine translation
+Transformer model for Text summarisation and machine translation created using TF2.
 
 # Features
-  a) Pointer generator can be enabled 
+  a) Pointer generator can be enabled
   b) BERT SCORE Evaluation metric
   c) Visualisation script to create summary statistics of the datasets
   d) Input can be fed as tfds or in csvs
@@ -16,14 +16,16 @@ seq2seq  train and infer skeleton for Text summarisation and machine translation
   
 # Features to be added (hopefully with help from others)
   *) Add requirements
-  
+  *) Housekeeping
+  *) Generalize to NMT
+  *) dummy script to suggest values for configure script 
   a) Gradient accumulation
-  b) Replace existing encoders and decoders with hugging face transformers 
-  c) Visualizing the attention weights
+  b) New transformer.py to replace existing encoders and decoders with hugging face transformers 
+  c) Visualize the attention weights
   d) Replace tf.pyfunction to tf.function
   e) Add BEAM search as part of training 
   
-# Inspired from 
+# Ideas adapted from 
   a) https://arxiv.org/pdf/1902.09243v2.pdf
   b) http://karpathy.github.io/2019/04/25/recipe/
   c) https://github.com/policeme/transformer-pointer-generator
