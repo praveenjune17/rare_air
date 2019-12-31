@@ -24,7 +24,7 @@ mixed_precision.set_policy(policy)
 
 optimizer = mixed_precision.LossScaleOptimizer(optimizer, loss_scale='dynamic')
 
-train_dataset, val_dataset, num_of_train_examples, num_of_valid_examples = create_train_data()
+train_dataset, val_dataset, num_of_train_examples, _ = create_train_data()
 train_loss, train_accuracy = get_loss_and_accuracy()
 validation_loss, validation_accuracy = get_loss_and_accuracy()
 
@@ -44,16 +44,14 @@ def train_step(inp, tar, inp_shape, tar_shape, batch):
   tar_inp = tar[:, :-1]
   tar_real = tar[:, 1:]
   enc_padding_mask, combined_mask, dec_padding_mask = create_masks(inp, tar_inp)
-  #inp = tf.cast(inp, dtype=tf.float32)
-  #tar_inp = tf.cast(tar_inp, dtype=tf.float32)
   with tf.GradientTape() as tape:
     predictions, attention_weights, dec_output = transformer(
                                                              inp, 
                                                              tar_inp, 
-                                                             True, 
                                                              enc_padding_mask, 
                                                              combined_mask, 
-                                                             dec_padding_mask
+                                                             dec_padding_mask,
+                                                             training=True
                                                              )
     train_variables = transformer.trainable_variables
     tf.debugging.check_numerics(
@@ -61,15 +59,23 @@ def train_step(inp, tar, inp_shape, tar_shape, batch):
                                 "Nan's in the transformer predictions"
                                 )
     if config.copy_gen:
-      predictions = pointer_generator(dec_output, predictions, attention_weights, inp, 
-                            inp_shape, tar_shape, batch, training=True)
+      predictions = pointer_generator(
+                                      dec_output, 
+                                      predictions, 
+                                      attention_weights, 
+                                      inp, 
+                                      inp_shape, 
+                                      tar_shape, 
+                                      batch, 
+                                      training=True
+                                      )
       tf.debugging.check_numerics(
                                 predictions,
                                 "Nan's in the pointer_generator predictions"
                                 )
       train_variables = train_variables + pointer_generator.trainable_variables
     loss = loss_function(tar_real, predictions)
-    scaled_loss = optimizer.get_scaled_loss(loss)
+  scaled_loss = optimizer.get_scaled_loss(loss)
   scaled_gradients = tape.gradient(scaled_loss, train_variables)
   gradients = optimizer.get_unscaled_gradients(scaled_gradients)
   optimizer.apply_gradients(zip(gradients, train_variables))
@@ -81,15 +87,13 @@ def val_step(inp, tar, epoch, inp_shape, tar_shape, batch, create_summ):
   tar_inp = tar[:, :-1]
   tar_real = tar[:, 1:]
   enc_padding_mask, combined_mask, dec_padding_mask = create_masks(inp, tar_inp)
-  #inp = tf.cast(inp, dtype=tf.float32)
-  #tar_inp = tf.cast(tar_inp, dtype=tf.float32)
   predictions, attention_weights, dec_output = transformer(
                                                            inp, 
                                                            tar_inp, 
-                                                           False, 
                                                            enc_padding_mask, 
                                                            combined_mask, 
-                                                           dec_padding_mask
+                                                           dec_padding_mask,
+                                                           training=False
                                                            )
   if config.copy_gen:
     predictions = pointer_generator(
@@ -135,7 +139,6 @@ for epoch in range(h_parms.epochs):
   train_accuracy.reset_states()
   validation_loss.reset_states()
   validation_accuracy.reset_states()
-  # inp -> document, tar -> summary
   for (batch, (inp, tar)) in enumerate(train_dataset):
   # the target is shifted right during training hence its shape is subtracted by 1
   # not able to do this inside tf.function since it doesn't allow this operation

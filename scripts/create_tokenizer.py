@@ -22,7 +22,7 @@ else:
       new_vocab_path = os.path.join(file_path.G_drive_vocab_path, os.path.split(file_path.subword_vocab_path)[1])
       tokenizer_en = tfds.features.text.SubwordTextEncoder.load_from_file(new_vocab_path)
   except FileNotFoundError:
-    log.warning('Vocab file not available in G-drive, Did you mount G-drive? ')
+    log.warning('Vocab file not available in G-drive, Did you mount G-drive and specify the correct G-drive path? ')
     try:
       os.makedirs(os.path.split(file_path.subword_vocab_path)[0])
     except FileExistsError:
@@ -40,4 +40,5 @@ else:
     tokenizer_en.save_to_file(file_path.subword_vocab_path)
              
 log.info('subword vocab file loaded')
-assert(tokenizer_en.vocab_size+2 == config.input_vocab_size== config.target_vocab_size), f' *vocab size in configuration script should be {tokenizer_en.vocab_size+2}'
+assert(tokenizer_en.vocab_size+2 == config.input_vocab_size== config.target_vocab_size), 
+      f' *vocab size in configuration script should be {tokenizer_en.vocab_size+2}'

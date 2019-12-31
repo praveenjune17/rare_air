@@ -33,7 +33,7 @@ fh.setFormatter(formatter)
 log.addHandler(fh)
 log.propagate = False
 
-if not tf.test.is_gpu_available():
+if not tf.config.experimental.list_physical_devices('GPU'):
     log.warning("GPU Not available so Running in CPU")
 
 if config.run_tensorboard:

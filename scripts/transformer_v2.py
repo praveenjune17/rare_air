@@ -182,14 +182,12 @@ class EncoderLayer(tf.keras.layers.Layer):
     
     attn_output, _ = self.mha(x, x, x, mask)  
     attn_output = self.dropout1(attn_output, training=training)
-    #attn_output = tf.cast(attn_output, tf.float32)
     # (batch_size, input_seq_len, d_model)
     x = tf.cast(x, tf.float32)
     out1 = self.layernorm1(x + attn_output)  
     # (batch_size, input_seq_len, d_model)
     ffn_output = self.ffn(out1)  
     ffn_output = self.dropout2(ffn_output, training=training)
-    #ffn_output = tf.cast(ffn_output, tf.float32)
     # (batch_size, input_seq_len, d_model)
     out2 = self.layernorm2(out1 + ffn_output)  
     
@@ -220,21 +218,17 @@ class DecoderLayer(tf.keras.layers.Layer):
     
     attn1, attn_weights_block1 = self.mha1(x, x, x, look_ahead_mask)  
     attn1 = self.dropout1(attn1, training=training)
-    #attn1 = tf.cast(attn1, tf.float32)
     x = tf.cast(x, tf.float32)
     out1 = self.layernorm1(attn1 + x)
-    
     attn2, attn_weights_block2 = self.mha2(
         enc_output, enc_output, out1, padding_mask)  
     attn2 = self.dropout2(attn2, training=training)
     # (batch_size, target_seq_len, d_model)
-    #attn2 = tf.cast(attn2, tf.float32)
     out2 = self.layernorm2(attn2 + out1)  
     # (batch_size, target_seq_len, d_model)
     ffn_output = self.ffn(out2)  
     ffn_output = self.dropout3(ffn_output, training=training)
     # (batch_size, target_seq_len, d_model)
-    #ffn_output = tf.cast(ffn_output, tf.float32)
     out3 = self.layernorm3(ffn_output + out2)  
     return (out3, attn_weights_block1, attn_weights_block2)
 
@@ -296,7 +290,10 @@ class Decoder(tf.keras.layers.Layer):
     
     if h_parms.mean_attention_heads:
       # take mean of the block 2 attention heads of all the layers
-      block2_attention_weights = tf.reduce_mean([(attention_weights[key]) for key in attention_weights.keys() if 'block2' in key], axis=0)
+      block2_attention_weights = tf.reduce_mean(
+                                                [(attention_weights[key]) for key in attention_weights.keys() if 'block2' in key], 
+                                                axis=0
+                                                )
     else:
       # take the attention weights of the final layer 
       block2_attention_weights = attention_weights[f'decoder_layer{self.num_layers}_block2']
@@ -317,10 +314,10 @@ class Transformer(tf.keras.Model):
 
     self.final_layer = tf.keras.layers.Dense(target_vocab_size, dtype='float32')
     
-  def call(self, inp, tar, training, enc_padding_mask, 
-           look_ahead_mask, dec_padding_mask):
-
-    enc_output = self.encoder(inp, training, enc_padding_mask)  # (batch_size, inp_seq_len, d_model)
+  def call(self, inp, tar, enc_padding_mask, 
+           look_ahead_mask, dec_padding_mask,training):
+    # (batch_size, inp_seq_len, d_model)
+    enc_output = self.encoder(inp, training, enc_padding_mask)  
     
     # dec_output (batch_size, tar_seq_len, d_model)
     dec_output, attention_weights = self.decoder(
@@ -338,8 +335,9 @@ class Pointer_Generator(tf.keras.Model):
     self.pointer_generator_layer = tf.keras.layers.Dense(1)
     self.pointer_generator_vec   = tf.keras.layers.Activation('sigmoid', dtype='float32')
     
-  def call(self, dec_output, final_output, attention_weights, encoder_input, 
-           inp_shape, tar_shape, batch, training):
+  def call(self, dec_output, final_output, 
+          attention_weights, encoder_input, 
+          inp_shape, tar_shape, batch, training):
 
     batch = tf.shape(encoder_input)[0]
     # p_gen (batch_size, tar_seq_len, 1)
@@ -367,6 +365,6 @@ class Pointer_Generator(tf.keras.Model):
     # copy_probs (batch_size, tar_seq_len, target_vocab_size)
     copy_probs = tf.scatter_nd(indices, updates, shape)   
     # Added a small value to ensure numerical stability
-    combined_probs = vocab_dist + copy_probs + 0.0000001
+    combined_probs = vocab_dist + copy_probs
     combined_logits = tf.math.log(combined_probs)
     return combined_logits

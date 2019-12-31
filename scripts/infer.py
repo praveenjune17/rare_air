@@ -13,12 +13,11 @@ from beam_search import beam_search
 from preprocess import infer_data_from_df
 from rouge import Rouge
 from bert_score import score as b_score
-rouge_all = Rouge()
 
+rouge_all = Rouge()
 infer_template = '''Beam size <--- {}\
                     ROUGE-f1  <--- {}\
                     BERT-f1   <--- {}'''
-
 transformer = Transformer(
                           num_layers=config.num_layers, 
                           d_model=config.d_model, 
@@ -53,23 +52,23 @@ def beam_search_eval(document, beam_size):
     predictions, attention_weights, dec_output = transformer(
                                                              encoder_input, 
                                                              output,
-                                                             False,
                                                              enc_padding_mask,
                                                              combined_mask,
-                                                             dec_padding_mask
-                                                            )
+                                                             dec_padding_mask,
+                                                             False
+                                                             )
     
     if config.copy_gen:	
       predictions = pointer_generator(
-                              dec_output, 
-                              predictions, 
-                              attention_weights, 	
-                              encoder_input, 
-                              inp_shape, 
-                              output.shape[-1], 	
-                              batch, 
-                              False
-                              )
+                                      dec_output, 
+                                      predictions, 
+                                      attention_weights, 	
+                                      encoder_input, 
+                                      inp_shape, 
+                                      output.shape[-1], 	
+                                      batch, 
+                                      False
+                                      )
 
     # (batch_size, 1, target_vocab_size)
     return (predictions[:,-1:,:])  
@@ -104,9 +103,8 @@ def run_inference(dataset, beam_sizes_to_try=h_parms.beam_sizes):
       print(infer_template.format(beam_size, avg_rouge_f1, np.mean(bert_f1.numpy())))
       print(f'time to process document {doc_id} : {time.time()-start_time}') 
 
-#Restore the model's checkpoints
-restore_chkpt(file_path.infer_ckpt_path)
-infer_dataset = infer_data_from_df()
-
 if __name__ == '__main__':
+  #Restore the model's checkpoints
+  restore_chkpt(file_path.infer_ckpt_path)
+  infer_dataset = infer_data_from_df()
   run_inference(infer_dataset)

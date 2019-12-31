@@ -143,6 +143,7 @@ def monitor_run(latest_ckpt,
     return True
 
 lr = h_parms.learning_rate if h_parms.learning_rate else CustomSchedule(config.d_model)    
+
 if h_parms.grad_clipnorm:
   optimizer = tf.keras.optimizers.Adam(
                                        learning_rate=lr, 
