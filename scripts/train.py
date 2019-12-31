@@ -119,7 +119,7 @@ for epoch in range(h_parms.epochs):
                     train_accuracy.result(), 
                     transformer
                     )
-  count_recs(batch, epoch, num_of_train_examples)
+  #count_recs(batch, epoch, num_of_train_examples)
   (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(
                                                                       val_dataset, 
                                                                       epoch+1, 
