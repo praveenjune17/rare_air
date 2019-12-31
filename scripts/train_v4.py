@@ -75,7 +75,7 @@ def train_step(inp, tar, inp_shape, tar_shape, batch):
                                 )
       train_variables = train_variables + pointer_generator.trainable_variables
     loss = loss_function(tar_real, predictions)
-  scaled_loss = optimizer.get_scaled_loss(loss)
+    scaled_loss = optimizer.get_scaled_loss(loss)
   scaled_gradients = tape.gradient(scaled_loss, train_variables)
   gradients = optimizer.get_unscaled_gradients(scaled_gradients)
   optimizer.apply_gradients(zip(gradients, train_variables))
