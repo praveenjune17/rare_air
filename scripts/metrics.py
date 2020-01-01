@@ -10,7 +10,7 @@ from input_path import file_path
 from create_tokenizer import tokenizer_en
 from bert_score import score as b_score
 from creates import log, monitor_metrics
-from gradient_accum import AccumOptimizer
+#from gradient_accum import AccumOptimizer
 
 log.info('Loading Pre-trained BERT model for BERT SCORE calculation')
 _, _, _ = b_score(["I'm Batman"], ["I'm Spiderman"], lang='en', model_type='bert-base-uncased')
@@ -147,20 +147,20 @@ def monitor_run(latest_ckpt,
 lr = h_parms.learning_rate if h_parms.learning_rate else CustomSchedule(config.d_model)    
 
 if h_parms.grad_clipnorm:
-  optimizer = AccumOptimizer(
+  optimizer = tf.keras.optimizers.Adam(
                              learning_rate=lr, 
                              beta_1=0.9, 
                              beta_2=0.98, 
                              clipnorm=h_parms.grad_clipnorm,
-                             accum_iters=h_parms.accumulation_steps,
+                             #accum_iters=h_parms.accumulation_steps,
                              epsilon=1e-9
                              )
 else:
-  optimizer = AccumOptimizer(
+  optimizer = tf.keras.optimizers.Adam(
                              learning_rate=lr, 
                              beta_1=0.9, 
                              beta_2=0.98, 
-                             accum_iters=h_parms.accumulation_steps,
+                             #accum_iters=h_parms.accumulation_steps,
                              epsilon=1e-9
                              )
 
