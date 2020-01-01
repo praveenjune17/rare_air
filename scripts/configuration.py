@@ -38,7 +38,8 @@ config = Bunch(hyp)
 try:
   with open(file_path.log_path) as f:
     for line in reversed(f.readlines()):
-        if '- tensorflow - INFO - '+ config.monitor_metric in line:          
+        if ('- tensorflow - INFO - '+ config.monitor_metric in line) and \
+          (line[[i for i,char in enumerate((line)) if char.isdigit()][-1]+1] == '\n'):          
           config['last_recorded_value'] = float(line.split(config.monitor_metric)[1].split('\n')[0].strip())
           print(f"last_recorded_value of {config.monitor_metric} retained from last run {config['last_recorded_value']}")
           break
