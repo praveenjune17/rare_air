@@ -68,9 +68,9 @@ def calc_validation_loss(validation_dataset,
   for (batch, (inp, tar)) in enumerate(validation_dataset):
     # calculate rouge for only the first batch
     if batch == 0:
-      rouge_score, bert_score = val_step(inp, tar, epoch, inp.shape[1], tar.shape[1]-1, inp.shape[0], True)
+      rouge_score, bert_score = val_step(inp, tar, epoch, config.write_summary_op)
     else:
-      _ = val_step(inp, tar, epoch, config.write_summary_op)
+      _ = val_step(inp, tar, epoch, False)
     if config.run_tensorboard:
       with valid_summary_writer.as_default():
         tf.summary.scalar('validation_loss', validation_loss.result(), step=batch)

@@ -354,7 +354,7 @@ class Transformer(tf.keras.Model):
     self.decoder = Decoder(num_layers, d_model, num_heads, dff, 
                            target_vocab_size, rate)
 
-    self.final_layer = tf.keras.layers.Dense(target_vocab_size, dtype='float32')
+    self.final_layer = tf.keras.layers.Dense(target_vocab_size, dtype='float32', name='final_dense_layer')
     if config.copy_gen:
       self.pointer_generator   = Pointer_Generator()
   def call(self, inp, tar, enc_padding_mask, 
