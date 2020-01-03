@@ -1,5 +1,6 @@
 import tensorflow as tf
 import time
+from hyper_parameters import h_parms
 from configuration import config
 from creates import log
 
