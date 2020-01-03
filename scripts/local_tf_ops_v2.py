@@ -28,7 +28,6 @@ epoch_timing  = 'Time taken for {} epoch : {} secs'
 checkpoint_details = 'Saving checkpoint for epoch {} at {}'
 batch_zero = 'Time taken to feed the input data to the model {} seconds'
 batch_run_details = 'Epoch {} Batch {} Train_Loss {:.4f} Train_Accuracy {:.4f}'
-flag=False
 
 # run every batch
 def batch_run_check(batch, details_flag, epoch, start, train_summary_writer, train_loss, train_accuracy, transformer):
