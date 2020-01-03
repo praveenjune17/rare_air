@@ -27,7 +27,7 @@ train_dataset, val_dataset, num_of_train_examples, _ = create_train_data()
 train_loss, train_accuracy = get_loss_and_accuracy()
 validation_loss, validation_accuracy = get_loss_and_accuracy()
 accumulators = []
-
+details_flag = True
 transformer = Transformer(
                           num_layers=config.num_layers, 
                           d_model=config.d_model, 
@@ -127,7 +127,8 @@ for epoch in range(h_parms.epochs):
     train_step(inp, tar, grad_accum_flag)
     if grad_accum_flag:
       batch_run_check(
-                      batch, 
+                      batch,
+                      details_flag,
                       epoch, 
                       start, 
                       train_summary_writer, 
@@ -135,6 +136,8 @@ for epoch in range(h_parms.epochs):
                       train_accuracy.result(), 
                       transformer
                       )
+      details_flag=False
+  details_flag=False
   #count_recs(batch, epoch, num_of_train_examples)
   (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(
                                                                       val_dataset, 
