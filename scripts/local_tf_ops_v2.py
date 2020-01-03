@@ -31,15 +31,14 @@ batch_run_details = 'Epoch {} Batch {} Train_Loss {:.4f} Train_Accuracy {:.4f}'
 flag=False
 
 # run every batch
-def batch_run_check(batch, epoch, start, train_summary_writer, train_loss, train_accuracy, transformer):
+def batch_run_check(batch, details_flag, epoch, start, train_summary_writer, train_loss, train_accuracy, transformer):
   if config.run_tensorboard:
     with train_summary_writer.as_default():
       tf.summary.scalar('train_loss', train_loss, step=batch)
       tf.summary.scalar('train_accuracy', train_accuracy, step=batch)
-  if not flag:
+  if details_flag:
     log.info(transformer.summary())
     log.info(batch_zero.format(time.time()-start))
-    flag=True
   if batch % config.print_chks == h_parms.accumulation_steps:
     log.info(
              batch_run_details.format(
