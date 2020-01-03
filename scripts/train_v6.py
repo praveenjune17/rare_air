@@ -21,7 +21,6 @@ from local_tf_ops_v2 import *
 
 policy = mixed_precision.Policy('mixed_float16')
 mixed_precision.set_policy(policy)
-
 optimizer = mixed_precision.LossScaleOptimizer(optimizer, loss_scale='dynamic')
 
 train_dataset, val_dataset, num_of_train_examples, _ = create_train_data()
@@ -40,7 +39,7 @@ transformer = Transformer(
                           )
 
 
-@tf.function(input_signature=train_step_signature)
+#@tf.function(input_signature=train_step_signature)
 def train_step(inp, tar, grad_accum_flag):
   tar_inp = tar[:, :-1]
   tar_real = tar[:, 1:]
@@ -56,15 +55,14 @@ def train_step(inp, tar, grad_accum_flag):
                                                              )
     train_variables = transformer.trainable_variables
     loss = loss_function(tar_real, predictions)
-    # reference https://medium.com/huggingface/training-larger-batches-practical-tips-on-1-gpu-multi-gpu-distributed-setups-ec88c3e51255
-    loss = tf.math.divide(loss,h_parms.accumulation_steps)
-  gradients = tape.gradient(loss, train_variables)
-  grad_pairs = zip(gradients, train_variables)
+    scaled_loss = optimizer.get_scaled_loss(loss)
+  scaled_gradients  = tape.gradient(scaled_loss, train_variables)
+  gradients = optimizer.get_unscaled_gradients(scaled_gradients)
   # Initialize the shadow variables with same type as the gradients 
   if not accumulators:
     for tv in gradients:
       accumulators.append(tf.Variable(tf.zeros_like(tv), trainable=False))
-  # assign the gradients to the shadow variables
+  # accmulate the gradients to the shadow variables
   for (accumulator, grad) in zip(accumulators, gradients):
     accumulator.assign_add(grad)
   # apply the gradients and reset them to zero if the flag is true
@@ -127,15 +125,16 @@ for epoch in range(h_parms.epochs):
   # not able to do this inside tf.function since it doesn't allow this operation
     grad_accum_flag = True if (batch+1)%h_parms.accumulation_steps == 0 else False
     train_step(inp, tar, grad_accum_flag)
-    batch_run_check(
-                    batch, 
-                    epoch, 
-                    start, 
-                    train_summary_writer, 
-                    train_loss.result(), 
-                    train_accuracy.result(), 
-                    transformer
-                    )
+    if grad_accum_flag:
+      batch_run_check(
+                      batch, 
+                      epoch, 
+                      start, 
+                      train_summary_writer, 
+                      train_loss.result(), 
+                      train_accuracy.result(), 
+                      transformer
+                      )
   #count_recs(batch, epoch, num_of_train_examples)
   (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(
                                                                       val_dataset, 
