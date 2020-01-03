@@ -56,6 +56,8 @@ def train_step(inp, tar, grad_accum_flag):
                                                              )
     train_variables = transformer.trainable_variables
     loss = loss_function(tar_real, predictions)
+    # reference https://medium.com/huggingface/training-larger-batches-practical-tips-on-1-gpu-multi-gpu-distributed-setups-ec88c3e51255
+    loss = tf.math.divide(loss,h_parms.accumulation_steps)
   gradients = tape.gradient(loss, train_variables)
   grad_pairs = zip(gradients, train_variables)
   # Initialize the shadow variables with same type as the gradients 
