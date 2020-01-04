@@ -30,15 +30,15 @@ batch_zero = 'Time taken to feed the input data to the model {} seconds'
 batch_run_details = 'Epoch {} Batch {} Train_Loss {:.4f} Train_Accuracy {:.4f}'
 
 # run every batch
-def batch_run_check(batch, details_flag, epoch, start, train_summary_writer, train_loss, train_accuracy, transformer):
+def batch_run_check(batch, epoch, start, train_summary_writer, train_loss, train_accuracy, transformer):
   if config.run_tensorboard:
     with train_summary_writer.as_default():
       tf.summary.scalar('train_loss', train_loss, step=batch)
       tf.summary.scalar('train_accuracy', train_accuracy, step=batch)
-  if details_flag:
+  if batch==0 and epoch ==0:
     log.info(transformer.summary())
     log.info(batch_zero.format(time.time()-start))
-  if batch % config.print_chks == h_parms.accumulation_steps:
+  if batch % config.print_chks == 0:
     log.info(
              batch_run_details.format(
                                      epoch + 1, 
