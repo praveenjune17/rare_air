@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import tensorflow as tf
 tf.random.set_seed(100)
-#tf.config.optimizer.set_jit(True)
+tf.config.optimizer.set_jit(True)
 import time
 import os
 import shutil
@@ -38,7 +38,7 @@ model = Transformer(
                     )
 
 
-#@tf.function(input_signature=train_step_signature)
+@tf.function(input_signature=train_step_signature)
 def train_step(inp, tar, grad_accum_flag):
   tar_inp = tar[:, :-1]
   tar_real = tar[:, 1:]
