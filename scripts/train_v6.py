@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import tensorflow as tf
 tf.random.set_seed(100)
-tf.config.optimizer.set_jit(True)
+#tf.config.optimizer.set_jit(True)
 import time
 import os
 import shutil
@@ -125,19 +125,15 @@ for epoch in range(h_parms.epochs):
   # not able to do this inside tf.function since it doesn't allow this operation
     grad_accum_flag = True if (batch+1)%h_parms.accumulation_steps == 0 else False
     train_step(inp, tar, grad_accum_flag)
-    if grad_accum_flag:
-      batch_run_check(
-                      batch,
-                      details_flag,
-                      epoch, 
-                      start, 
-                      train_summary_writer, 
-                      train_loss.result(), 
-                      train_accuracy.result(), 
-                      transformer
-                      )
-      details_flag=False
-  details_flag=False
+    batch_run_check(
+                    batch, 
+                    epoch, 
+                    start, 
+                    train_summary_writer, 
+                    train_loss.result(), 
+                    train_accuracy.result(), 
+                    transformer
+                    )
   #count_recs(batch, epoch, num_of_train_examples)
   (val_acc, val_loss, rouge_score, bert_score) = calc_validation_loss(
                                                                       val_dataset, 
