@@ -1,13 +1,11 @@
 import tensorflow as tf
 import time
-from hyper_parameters import h_parms
 from configuration import config
 from creates import log
 
 train_step_signature = [
                       tf.TensorSpec(shape=(None, None), dtype=tf.int64),
-                      tf.TensorSpec(shape=(None, None), dtype=tf.int64),
-                      tf.TensorSpec(shape=(None), dtype=tf.bool)
+                      tf.TensorSpec(shape=(None, None), dtype=tf.int64)
                       ]
 
 val_step_signature = [
@@ -28,6 +26,7 @@ epoch_timing  = 'Time taken for {} epoch : {} secs'
 checkpoint_details = 'Saving checkpoint for epoch {} at {}'
 batch_zero = 'Time taken to feed the input data to the model {} seconds'
 batch_run_details = 'Epoch {} Batch {} Train_Loss {:.4f} Train_Accuracy {:.4f}'
+
 
 # run every batch
 def batch_run_check(batch, epoch, start, train_summary_writer, train_loss, train_accuracy, transformer):

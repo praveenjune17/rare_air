@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import tensorflow as tf
 tf.random.set_seed(100)
-#tf.config.optimizer.set_jit(True)
+tf.config.optimizer.set_jit(True)
 import time
 import os
 import shutil
@@ -17,17 +17,17 @@ from metrics import optimizer, loss_function, get_loss_and_accuracy, tf_write_su
 from input_path import file_path
 from creates import log, train_summary_writer, valid_summary_writer
 from create_tokenizer import tokenizer_en
-from local_tf_ops_v2 import *
+from local_tf_ops import *
 
 policy = mixed_precision.Policy('mixed_float16')
 mixed_precision.set_policy(policy)
+
 optimizer = mixed_precision.LossScaleOptimizer(optimizer, loss_scale='dynamic')
 
 train_dataset, val_dataset, num_of_train_examples, _ = create_train_data()
 train_loss, train_accuracy = get_loss_and_accuracy()
 validation_loss, validation_accuracy = get_loss_and_accuracy()
-accumulators = []
-details_flag = True
+
 transformer = Transformer(
                           num_layers=config.num_layers, 
                           d_model=config.d_model, 
@@ -38,9 +38,8 @@ transformer = Transformer(
                           rate=h_parms.dropout_rate
                           )
 
-
-#@tf.function(input_signature=train_step_signature)
-def train_step(inp, tar, grad_accum_flag):
+@tf.function(input_signature=train_step_signature)
+def train_step(inp, tar):
   tar_inp = tar[:, :-1]
   tar_real = tar[:, 1:]
   enc_padding_mask, combined_mask, dec_padding_mask = create_masks(inp, tar_inp)
@@ -56,22 +55,9 @@ def train_step(inp, tar, grad_accum_flag):
     train_variables = transformer.trainable_variables
     loss = loss_function(tar_real, predictions)
     scaled_loss = optimizer.get_scaled_loss(loss)
-  scaled_gradients  = tape.gradient(scaled_loss, train_variables)
+  scaled_gradients = tape.gradient(scaled_loss, train_variables)
   gradients = optimizer.get_unscaled_gradients(scaled_gradients)
-  # Initialize the shadow variables with same type as the gradients 
-  if not accumulators:
-    for tv in gradients:
-      accumulators.append(tf.Variable(tf.zeros_like(tv), trainable=False))
-  # accmulate the gradients to the shadow variables
-  for (accumulator, grad) in zip(accumulators, gradients):
-    accumulator.assign_add(grad)
-  # apply the gradients and reset them to zero if the flag is true
-  if grad_accum_flag:
-    for accumlator in accumulators:
-      accumulator.assign(tf.math.divide(accumulator,h_parms.accumulation_steps))
-    optimizer.apply_gradients(zip(accumulators, train_variables))
-    for accumulator in (accumulators):
-        accumulator.assign(tf.zeros_like(accumulator))
+  optimizer.apply_gradients(zip(gradients, train_variables))
   train_loss(loss)
   train_accuracy(tar_real, predictions)  
   
@@ -123,8 +109,7 @@ for epoch in range(h_parms.epochs):
   for (batch, (inp, tar)) in enumerate(train_dataset):
   # the target is shifted right during training hence its shape is subtracted by 1
   # not able to do this inside tf.function since it doesn't allow this operation
-    grad_accum_flag = True if (batch+1)%h_parms.accumulation_steps == 0 else False
-    train_step(inp, tar, grad_accum_flag)
+    train_step(inp, tar)        
     batch_run_check(
                     batch, 
                     epoch, 

@@ -5,7 +5,7 @@ import time
 import os
 import numpy as np
 from create_tokenizer import tokenizer_en
-from transformer import Transformer, Pointer_Generator, create_masks
+from transformer import Transformer, create_masks
 from hyper_parameters import h_parms
 from configuration import config
 from input_path import file_path
@@ -18,21 +18,19 @@ rouge_all = Rouge()
 infer_template = '''Beam size <--- {}\
                     ROUGE-f1  <--- {}\
                     BERT-f1   <--- {}'''
-transformer = Transformer(
-                          num_layers=config.num_layers, 
-                          d_model=config.d_model, 
-                          num_heads=config.num_heads, 
-                          dff=config.dff, 
-                          input_vocab_size=config.input_vocab_size, 
-                          target_vocab_size=config.target_vocab_size, 
-                          rate=h_parms.dropout_rate
-                          )
-pointer_generator   = Pointer_Generator()
+model = Transformer(
+                    num_layers=config.num_layers, 
+                    d_model=config.d_model, 
+                    num_heads=config.num_heads, 
+                    dff=config.dff, 
+                    input_vocab_size=config.input_vocab_size, 
+                    target_vocab_size=config.target_vocab_size, 
+                    rate=h_parms.dropout_rate
+                    )
 
 def restore_chkpt(checkpoint_path):
     ckpt = tf.train.Checkpoint(
-                               transformer=transformer,
-                               pointer_generator=pointer_generator
+                               model=model
                                )
     assert tf.train.latest_checkpoint(os.path.split(checkpoint_path)[0]), 'Incorrect checkpoint direcotry'
     ckpt.restore(checkpoint_path).expect_partial()
@@ -44,36 +42,24 @@ def beam_search_eval(document, beam_size):
   end = [tokenizer_en.vocab_size+1]
   encoder_input = tf.tile(document, multiples=[beam_size, 1])
   batch, inp_shape = encoder_input.shape
-  def transformer_query(output):
+  def decoder_query(output):
     enc_padding_mask, combined_mask, dec_padding_mask = create_masks(
                                                                      encoder_input, 
                                                                      output
                                                                      )
-    predictions, attention_weights, dec_output = transformer(
-                                                             encoder_input, 
-                                                             output,
-                                                             enc_padding_mask,
-                                                             combined_mask,
-                                                             dec_padding_mask,
-                                                             False
-                                                             )
-    
-    if config.copy_gen:	
-      predictions = pointer_generator(
-                                      dec_output, 
-                                      predictions, 
-                                      attention_weights, 	
-                                      encoder_input, 
-                                      inp_shape, 
-                                      output.shape[-1], 	
-                                      batch, 
-                                      False
-                                      )
+    predictions, attention_weights, dec_output = model(
+                                                       encoder_input, 
+                                                       output,
+                                                       enc_padding_mask,
+                                                       combined_mask,
+                                                       dec_padding_mask,
+                                                       False
+                                                       )
 
     # (batch_size, 1, target_vocab_size)
     return (predictions[:,-1:,:])  
   return beam_search(
-                     transformer_query, 
+                     decoder_query, 
                      start, 
                      beam_size, 
                      config.summ_length, 
