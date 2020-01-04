@@ -305,7 +305,10 @@ class Pointer_Generator(tf.keras.layers.Layer):
   def __init__(self):
     super(Pointer_Generator, self).__init__()
     
-    self.pointer_generator_layer = tf.keras.layers.Dense(1)
+    self.pointer_generator_layer = tf.keras.layers.Dense(
+                                                         1, 
+                                                         kernel_regularizer = tf.keras.regularizers.l2(h_parms.l2_norm)
+                                                        )
     self.pointer_generator_vec   = tf.keras.layers.Activation('sigmoid', dtype='float32')
     
   def call(self, dec_output, final_output, 
@@ -354,7 +357,12 @@ class Transformer(tf.keras.Model):
     self.decoder = Decoder(num_layers, d_model, num_heads, dff, 
                            target_vocab_size, rate)
 
-    self.final_layer = tf.keras.layers.Dense(target_vocab_size, dtype='float32', name='final_dense_layer')
+    self.final_layer = tf.keras.layers.Dense(
+                                             target_vocab_size, 
+                                             dtype='float32',
+                                             kernel_regularizer=tf.keras.regularizers.l2(h_parms.l2_norm),                                                      
+                                             name='final_dense_layer'
+                                             )
     if config.copy_gen:
       self.pointer_generator   = Pointer_Generator()
   def call(self, inp, tar, enc_padding_mask, 
