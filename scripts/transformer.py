@@ -323,7 +323,10 @@ class Pointer_Generator(tf.keras.layers.Layer):
     vocab_dist = p_gen * vocab_dist_ 
     # attention_dist (batch_size, tar_seq_len, inp_seq_len)
     # attention_weights is 4D so taking mean of the second dimension(i.e num_heads)
-    attention_weights_ = tf.reduce_mean(attention_weights, axis=1)
+    if h_parms.mean_attention_heads:
+      attention_weights_ = tf.reduce_mean(attention_weights, axis=1)
+    else:
+      attention_weights_ = attention_weights[:, -1, :, :]
     attention_dist = tf.math.softmax(attention_weights_, axis=-1)
     # updates (batch_size, tar_seq_len, inp_seq_len)
     updates = (1 - p_gen) * attention_dist
