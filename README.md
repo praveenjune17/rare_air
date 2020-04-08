@@ -14,16 +14,13 @@ Transformer model for Text summarisation and machine translation created using T
   j) Optimized with keras mixed precision policy
   h) Automatic vocab file generation
   
-# Features to be added (hopefully with help from others)
+# Features to be added 
   *) Add requirements
   *) Housekeeping
   *) Generalize to NMT
-  *) dummy script to suggest values for configure script 
-  a) Gradient accumulation
-  b) New transformer.py to replace existing encoders and decoders with hugging face transformers 
-  c) Visualize the attention weights
-  d) Replace tf.pyfunction to tf.function
-  e) Add BEAM search as part of training 
+  *) New transformer.py to replace existing encoders and decoders with hugging face transformers 
+  *) Visualize the attention weights
+  *) Replace tf.pyfunction to tf.function
   
 # Ideas adapted from 
   a) https://arxiv.org/pdf/1902.09243v2.pdf
